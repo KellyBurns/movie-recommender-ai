@@ -1,47 +1,55 @@
 import os
-import random
-from flask import Flask
+from flask import Flask, render_template
+# This will link our movie app folder
+from movies.movies import movies_bp
 
 app = Flask(__name__)
 
-# A "spellbinding" list for someone who loves Sharp Objects
-thrillers = [
-    {"title": "Gone Girl", "desc": "A dark look at a marriage gone wrong when a wife disappears."},
-    {"title": "The Girl on the Train", "desc": "An alcoholic voyeur becomes entangled in a missing persons investigation."},
-    {"title": "The Killing (TV Series)", "desc": "Atmospheric, rain-soaked, and deeply addictive mystery."},
-    {"title": "Wind River", "desc": "A chilling mystery set on a remote Wyoming reservation."},
-    {"title": "The Night Of", "desc": "A gripping, high-tension dive into a complex murder case."}
-]
+# This tells the site: "Everything in the movies folder lives at /movies"
+app.register_blueprint(movies_bp, url_prefix='/movies')
 
 @app.route('/')
 def home():
-    selection = random.choice(thrillers)
-    return f"""
-    <html>
-        <head>
-            <title>Spellbinding Recommendations</title>
-            <style>
-                body {{ font-family: 'Georgia', serif; background-color: #0f0f0f; color: #e0e0e0; text-align: center; padding: 50px; }}
-                .container {{ border: 1px solid #333; padding: 40px; border-radius: 8px; display: inline-block; max-width: 600px; background: #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }}
-                h1 {{ color: #b12704; letter-spacing: 2px; }}
-                .movie-title {{ font-size: 2em; color: #fff; margin: 20px 0; font-style: italic; }}
-                .desc {{ font-size: 1.1em; color: #aaa; line-height: 1.6; }}
-                .btn {{ display: inline-block; margin-top: 30px; padding: 10px 20px; background: #b12704; color: white; text-decoration: none; border-radius: 4px; }}
-                .btn:hover {{ background: #ff3300; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🎬 THE DARK ROOM</h1>
-                <p>Because you need something that grips you...</p>
-                <div class="movie-title">{selection['title']}</div>
-                <p class="desc">{selection['desc']}</p>
-                <a href="/" class="btn">GIVE ME ANOTHER</a>
-            </div>
-        </body>
-    </html>
-    """
+    # Your Portfolio Hub Data
+    projects = [
+        {"name": "AI Movie Recommender", "url": "/movies", "tech": "Hugging Face NLP", "status": "Live"},
+        {"name": "Coming Soon", "url": "#", "tech": "TBD", "status": "In Development"}
+    ]
+    return render_template('index.html', projects=projects)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
+2. The Movie Brain (movies/movies.py)
+Create a folder named movies and put this inside it. This is where the 90% Probability logic lives.
+
+Python
+import os
+from flask import Blueprint, render_template, request
+from huggingface_hub import InferenceClient
+
+movies_bp = Blueprint('movies', __name__, template_folder='templates', static_folder='static')
+
+# Uses the secret key you just added to Railway!
+client = InferenceClient(api_key=os.environ.get("HF_TOKEN"))
+
+@movies_bp.route('/', methods=['GET', 'POST'])
+def index():
+    recommendations = []
+    if request.method == 'POST':
+        user_input = request.form.get('movies')
+        # Here we'd call the HF model to compare vectors
+        # For the prototype, we use a creative prompt for the AI
+        prompt = f"User loves: {user_input}. Suggest 3 movies with a 'Similarity Score' percentage."
+        
+        try:
+            response = client.chat.completions.create(
+                model="mistralai/Mistral-7B-Instruct-v0.2",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=150
+            )
+            recommendations = response.choices[0].message.content.split('\n')
+        except:
+            recommendations = ["The AI is warming up. Please try again in 30 seconds!"]
+
+    return render_template('movies.html', recommendations=recommendations)
