@@ -1,3 +1,9 @@
+import os
+import requests
+from flask import Flask, request, render_template_string
+
+app = Flask(__name__)
+
 # Hugging Face Setup
 API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
 headers = {
