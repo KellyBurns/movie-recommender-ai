@@ -20,29 +20,44 @@ def home():
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 height: 100vh;
                 display: flex;
-                /* This moves the content to the right side */
                 justify-content: flex-end; 
                 align-items: center;
-                /* This keeps the card from touching the actual edge */
-                padding-right: 10%; 
+                padding-right: 8%; 
             }
             .glass-card {
-                background: rgba(0, 0, 0, 0.6);
+                background: rgba(0, 0, 0, 0.65);
                 backdrop-filter: blur(15px);
                 -webkit-backdrop-filter: blur(15px);
-                padding: 50px;
-                border-radius: 20px;
-                border: 1px solid rgba(255,255,255,0.2);
+                
+                /* TALLER LOOK: High top/bottom padding, tighter side padding */
+                padding: 80px 40px; 
+                
+                border-radius: 30px;
+                border: 1px solid rgba(255,255,255,0.15);
                 text-align: center;
-                max-width: 400px;
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+                
+                /* NO-WRAP PROTECTION: ensures your name stays on one line */
+                min-width: 320px; 
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             }
-            h1 { font-size: 2.8rem; margin: 0; line-height: 1.1; }
-            p { font-size: 1.3rem; margin-top: 15px; opacity: 0.9; }
+            h1 { 
+                font-size: 2.5rem; 
+                margin: 0; 
+                white-space: nowrap; /* Forces name to stay on one line */
+            }
+            p { 
+                font-size: 1.2rem; 
+                margin-top: 30px; 
+                opacity: 0.8; 
+                line-height: 1.4;
+            }
             .btn {
-                margin-top: 30px;
+                margin-top: 50px; /* Pushes button further down for verticality */
                 display: inline-block;
-                padding: 12px 35px;
+                padding: 15px 30px;
                 background: #4da6ff;
                 color: white;
                 text-decoration: none;
@@ -56,8 +71,8 @@ def home():
     <body>
         <div class="glass-card">
             <h1>Kelly A. Burns</h1>
-            <p>Explorations in AI development</p>
-            <a href="/movies" class="btn">Launch Movie Recommender</a>
+            <p>Explorations in<br>AI development</p>
+            <a href="/movies" class="btn">Launch Project</a>
         </div>
     </body>
     </html>
@@ -65,7 +80,7 @@ def home():
 
 @app.route('/movies')
 def movies():
-    return "<h1>Movie Brain Loading...</h1><p>See you tomorrow!</p>"
+    return "<h1>Movie Brain Loading...</h1>"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
