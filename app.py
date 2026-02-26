@@ -4,49 +4,48 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# UPDATED: The correct 2026 Router endpoint for Mistral
-API_URL = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3"
+# UPDATED: The definitive 2026 Router path
+API_URL = "https://router.huggingface.co/hf-inference/v1/chat/completions"
 HF_TOKEN = os.environ.get('HF_TOKEN')
 
 def query_ai(movies, platform, creativity):
     if not HF_TOKEN:
-        return "<p style='color:red;'>Error: HF_TOKEN variable is missing in Railway!</p>"
+        return "<p style='color:red;'>Error: HF_TOKEN missing in Railway!</p>"
     
     headers = {
         "Authorization": f"Bearer {HF_TOKEN.strip()}",
-        "Content-Type": "application/json",
-        "X-Wait-For-Model": "true"
+        "Content-Type": "application/json"
     }
     
     temp = float(creativity) / 10.0
-    prompt = f"<s>[INST] Recommend 10 movies for someone who likes: {movies}. Preferred Platform: {platform}. Return ONLY an HTML table with Title, Synopsis, Stars, and Streaming. No chatter. [/INST]"
     
     payload = {
-        "inputs": prompt, 
-        "parameters": {"temperature": temp, "max_new_tokens": 1000}
+        "model": "mistralai/Mistral-7B-Instruct-v0.3",
+        "messages": [
+            {"role": "system", "content": "You are a movie expert. Return ONLY an HTML table. No conversation."},
+            {"role": "user", "content": f"Recommend 10 movies for a fan of {movies} on {platform}. Table columns: Title, Synopsis, Stars, Streaming."}
+        ],
+        "temperature": temp,
+        "max_tokens": 1000
     }
     
     try:
         response = requests.post(API_URL, headers=headers, json=payload, timeout=110)
         
         if response.status_code != 200:
-            return f"<p style='color:orange;'>AI Error {response.status_code}: {response.text}</p>"
+            return f"<div style='color:orange;'><b>AI Error {response.status_code}:</b><br>{response.text}</div>"
             
         data = response.json()
         
-        if isinstance(data, dict) and "estimated_time" in data:
-            wait = int(data['estimated_time'])
-            return f"<div style='color:#4da6ff;'>AI is warming up (ready in {wait}s). Click 'Find My Matches' again!</div>"
-
-        if isinstance(data, list) and len(data) > 0:
-            output = data[0].get('generated_text', "")
+        if 'choices' in data and len(data['choices']) > 0:
+            output = data['choices'][0]['message']['content']
             if "<table>" in output:
                 return "<table>" + output.split("<table>")[1].split("</table>")[0] + "</table>"
-            return f"<p>AI results arrived but no table was found. Click again!</p>"
+            return f"<div class='results-area'>{output}</div>"
         
-        return "<p>AI is ready. Please click the button again!</p>"
+        return "<p>AI is warming up. Please click again in 5 seconds!</p>"
     except Exception as e:
-        return f"<p>Connection Error: {str(e)}</p>"
+        return f"<p>Technical Error: {str(e)}</p>"
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -104,7 +103,6 @@ HTML_TEMPLATE = """
                 <option value="Anywhere">Anywhere</option>
                 <option value="Netflix">Netflix</option>
                 <option value="Amazon Prime">Amazon Prime</option>
-                <option value="HBO Max">HBO Max</option>
             </select>
             <label style="display:block; margin-top:15px; font-size:0.9rem;">Creativity: {{ selected_creativity }}</label>
             <input type="range" name="creativity" min="1" max="10" value="{{ selected_creativity }}" style="width:100%;">
@@ -114,13 +112,16 @@ HTML_TEMPLATE = """
     </div>
     <script>
         document.getElementById('mainForm').onsubmit = function() {
-            document.getElementById('submitBtn').innerHTML = "Thinking...";
+            document.getElementById('submitBtn').innerHTML = "Consulting AI...";
         };
     </script>
 </body>
 </html>
 """
 
+# --- THE ESSENTIAL ENGINE STARTUP ---
 if __name__ == "__main__":
+    # This line connects Railway's assigned port to your app
     port = int(os.environ.get("PORT", 8080))
+    # This line tells the app to listen to the whole internet (0.0.0.0)
     app.run(host='0.0.0.0', port=port)
