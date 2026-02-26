@@ -89,15 +89,16 @@ body {
         }
 
         .card { 
-            background: rgba(10, 15, 25, 0.9); 
-            backdrop-filter: blur(15px);
+            background: rgba(10, 15, 25, 0.92); 
+            backdrop-filter: blur(20px);
             padding: 30px; 
-            border-radius: 24px; 
-            width: 100%; /* Fill the screen width */
-            max-width: 500px; /* But don't get too big on desktop */
-            border: 1px solid rgba(77, 166, 255, 0.2); 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            margin-top: 20px; /* Space from the top of the phone */
+            border-radius: 28px; 
+            width: 92vw; /* 92% of the screen width */
+            max-width: 550px; 
+            border: 1px solid rgba(77, 166, 255, 0.3); 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+            margin: 20px auto; /* This centers it perfectly */
+            box-sizing: border-box; /* This keeps it from spilling over */
         }
 
         /* THE MOBILE TEXT FIX */
