@@ -4,8 +4,8 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# UPDATED: Using the new Hugging Face Router URL
-API_URL = "https://router.huggingface.co/mistralai/Mistral-7B-Instruct-v0.2"
+# UPDATED: Using the definitive Inference API path which is more reliable than the router for Mistral
+API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
 HF_TOKEN = os.environ.get('HF_TOKEN')
 
 def query_ai(movies, platform, creativity):
@@ -19,34 +19,40 @@ def query_ai(movies, platform, creativity):
     }
     
     temp = float(creativity) / 10.0
-    # Strict prompt to force a table
-    prompt = f"<s>[INST] User likes: {movies}. Platform: {platform}. List 10 recommendations. Format ONLY as an HTML table with Title, Synopsis, Stars, and Streaming. No other text. [/INST]"
+    # Mistral v0.3 likes this specific prompt format
+    prompt = f"<s>[INST] Recommend 10 movies for someone who likes: {movies}. Preferred Platform: {platform}. Return ONLY an HTML table with columns: Title, Synopsis, Stars, and Streaming. No conversational text. [/INST]"
     
-    payload = {"inputs": prompt, "parameters": {"temperature": temp, "max_new_tokens": 1000}}
+    payload = {
+        "inputs": prompt, 
+        "parameters": {
+            "temperature": temp, 
+            "max_new_tokens": 1200,
+            "return_full_text": False
+        }
+    }
     
     try:
-        # We wait up to 110 seconds for the model to generate the table
+        # 110-second timeout to allow the model to load into memory
         response = requests.post(API_URL, headers=headers, json=payload, timeout=110)
         
-        # Check if the API actually sent back an error (like a bad token)
         if response.status_code != 200:
-            return f"<p style='color:orange;'>AI Error {response.status_code}: {response.text}</p>"
+            return f"<p style='color:orange;'>AI Status {response.status_code}: {response.text}</p>"
             
         data = response.json()
         
-        # If model is loading
+        # Handle the loading state
         if isinstance(data, dict) and "estimated_time" in data:
             wait = int(data['estimated_time'])
-            return f"<div style='color:#4da6ff;'>AI is warming up (ready in {wait}s). Click 'Find My Matches' again!</div>"
+            return f"<div style='color:#4da6ff;'>AI is warming up (ready in {wait}s). Please click 'Find My Matches' again!</div>"
 
-        # If we got the text back
+        # Extracting the table from the response
         if isinstance(data, list) and len(data) > 0:
             output = data[0].get('generated_text', "")
             if "<table>" in output:
                 return "<table>" + output.split("<table>")[1].split("</table>")[0] + "</table>"
-            return f"<p>AI responded but didn't make a table. Click again!</p>"
+            return f"<p>AI found results but didn't format the table. Click 'Find My Matches' again.</p>"
         
-        return "<p>No results found. Please try different movies.</p>"
+        return "<p>The AI is ready. Please click the button one more time!</p>"
     except Exception as e:
         return f"<p>Request failed: {str(e)}. Please wait 10 seconds and try again.</p>"
 
@@ -74,7 +80,6 @@ HTML_TEMPLATE = """
         body { 
             margin: 0; 
             background: #0b0d17; 
-            /* RESTORED: Using your /static folder image */
             background-image: url('/static/space-ai-bg.jpg');
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -104,7 +109,7 @@ HTML_TEMPLATE = """
         <h1>Movie Match Maker AI</h1>
         <p style="opacity: 0.7;">Your AI Cinema Concierge</p>
         <form method="POST" id="mainForm">
-            <input type="text" name="movie_input" placeholder="Movies (e.g. Jeepers Creepers, Jaws)" value="{{ user_input }}" required>
+            <input type="text" name="movie_input" placeholder="Movies you love..." value="{{ user_input }}" required>
             <select name="platform">
                 <option value="Anywhere" {% if selected_platform == 'Anywhere' %}selected{% endif %}>Anywhere</option>
                 <option value="Netflix" {% if selected_platform == 'Netflix' %}selected{% endif %}>Netflix</option>
