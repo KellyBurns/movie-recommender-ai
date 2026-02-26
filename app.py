@@ -75,7 +75,7 @@ LANDING_TEMPLATE = """
 
 body { 
             margin: 0; 
-            background: #05070a; /* Fallback color */
+            background-color: #05070a; 
             color: white; 
             font-family: 'Inter', sans-serif; 
             display: flex; 
@@ -83,8 +83,9 @@ body {
             align-items: center; 
             min-height: 100vh; 
             padding-right: 5%;
-            /* This is the line that creates the depth */
+            /* This creates the 'Image' effect without a file */
             background-image: radial-gradient(circle at 20% 30%, #1a2a44 0%, #05070a 100%);
+            background-repeat: no-repeat;
             background-attachment: fixed;
         }
 
