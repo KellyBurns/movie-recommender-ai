@@ -13,8 +13,6 @@ def query_ai(movies, platform, creativity):
         return "<p style='color:red;'>Error: HF_TOKEN missing!</p>"
     
     headers = {"Authorization": f"Bearer {HF_TOKEN.strip()}", "Content-Type": "application/json"}
-    
-    # Cap temperature to prevent gibberish/hallucinations
     temp = min(float(creativity) / 10.0, 0.9)
     
     payload = {
@@ -30,7 +28,7 @@ def query_ai(movies, platform, creativity):
             }
         ],
         "temperature": temp,
-        "presence_penalty": 0.5, # Prevents repetitive babble loops
+        "presence_penalty": 0.5,
         "max_tokens": 1400
     }
     
@@ -43,7 +41,7 @@ def query_ai(movies, platform, creativity):
         output = data['choices'][0]['message']['content']
         
         if "<table>" in output:
-            table_html = output.split("<table>")[1].split("</table>")[0]
+            table_html = output.split("<table>")[1].split("<table>")[0]
             return '<table id="movieTable">' + table_html + '</table>'
         
         return "<div class='ai-text-fallback'>The AI had a glitch. Please refresh and try again.</div>"
@@ -83,11 +81,20 @@ HTML_TEMPLATE = """
         h2 { color: #4da6ff; margin-bottom: 0px; font-weight: 300; letter-spacing: 1px; }
         .subtitle { font-size: 0.9rem; color: #4da6ff; opacity: 0.7; margin-bottom: 25px; display: block; }
         label { font-size: 0.8rem; opacity: 0.8; display: block; margin-top: 15px; }
+        
+        /* Pro Tip Styling */
+        .hint { 
+            font-size: 0.75rem; color: #4da6ff; opacity: 0.9; 
+            margin-top: 10px; display: block; line-height: 1.4; 
+            border-left: 2px solid #4da6ff; padding-left: 10px;
+        }
+
         input, select { 
             width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; 
             border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); 
-            color: white; font-size: 1rem; box-sizing: border-box;
+            color: white; font-size: 1rem; box-sizing: border-box; outline: none; transition: 0.3s;
         }
+        input:focus { border-color: #4da6ff; box-shadow: 0 0 10px rgba(77,166,255,0.3); }
         .range-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: #4da6ff; margin-bottom: 10px; }
         .btn { 
             background: linear-gradient(135deg, #4da6ff, #0066cc); color: white; 
@@ -117,9 +124,11 @@ HTML_TEMPLATE = """
         <h2>Movie Match Maker [BETA]</h2>
         <span class="subtitle">Let's find your next favorite film...</span>
         <form method="POST" id="movieForm">
-            <label>What movies do you love?</label>
-            <input type="text" name="movie_input" placeholder="e.g. Inception, Heat" value="{{ user_input }}" required>
-            <label>Where are you watching?</label>
+            <label>What movies or actors do you love? (separate with commas)</label>
+            <input type="text" name="movie_input" placeholder="e.g. Inception, Heat, Sandra Bullock" value="{{ user_input }}" required>
+            <span class="hint"><b>Pro Tip:</b> The more films and/or actors you provide, the better the AI can triangulate your specific taste in pacing, cinematography, and themes.</span>
+            
+            <label style="margin-top: 20px;">Where are you watching?</label>
             <select name="platform">
                 <option selected disabled>Select Streaming Service</option>
                 <option value="Anywhere">Anywhere</option>
@@ -128,6 +137,7 @@ HTML_TEMPLATE = """
                 <option value="HBO Max">HBO Max</option>
                 <option value="Disney+">Disney+</option>
             </select>
+            
             <label>Creativity Level</label>
             <input type="range" name="creativity" min="1" max="10" value="7">
             <div class="range-labels">
