@@ -4,8 +4,8 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# Hugging Face Setup
-API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
+# UPDATED: Using the new Hugging Face Router URL
+API_URL = "https://router.huggingface.co/mistralai/Mistral-7B-Instruct-v0.2"
 HF_TOKEN = os.environ.get('HF_TOKEN')
 
 def query_ai(movies, platform, creativity):
