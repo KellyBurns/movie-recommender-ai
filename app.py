@@ -10,11 +10,9 @@ HF_TOKEN = os.environ.get('HF_TOKEN')
 
 def query_ai(movies, platform, creativity):
     if not HF_TOKEN:
-        return "<p style='color:red;'>Error: HF_TOKEN missing in Railway!</p>"
+        return "<p style='color:red;'>Error: HF_TOKEN missing!</p>"
     
     headers = {"Authorization": f"Bearer {HF_TOKEN.strip()}", "Content-Type": "application/json"}
-    
-    # Scale 1-10 to 0.1-1.0
     temp = float(creativity) / 10.0
     
     payload = {
@@ -22,42 +20,40 @@ def query_ai(movies, platform, creativity):
         "messages": [
             {
                 "role": "system", 
-                "content": "You are a movie expert. Return ONLY an HTML table. Columns MUST be: Year, Title, Synopsis, Stars, Streaming. No extra text."
+                "content": "You are a professional movie database. Return ONLY a valid HTML table. DO NOT use markdown. ORDER THE COLUMNS EXACTLY AS: Match %, Title, Year, Synopsis, Stars, Streaming. Use <table>, <tr>, <th>, and <td> tags. For Match %, generate a realistic percentage (e.g., 98%) based on the user's favorites."
             },
             {
                 "role": "user", 
-                "content": f"Recommend 10 movies for a fan of {movies} on {platform}."
+                "content": f"Recommend 10 movies for a fan of {movies} on {platform}. List the highest Match % at the top."
             }
         ],
         "temperature": temp,
-        "max_tokens": 1200
+        "max_tokens": 1600
     }
     
     try:
         response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
         if response.status_code != 200:
-            return f"<div style='color:orange;'>The AI is busy. Please try again in 10 seconds!</div>"
+            return f"<div style='color:orange;'>AI is recalibrating. Please try again!</div>"
             
         data = response.json()
         output = data['choices'][0]['message']['content']
         
         if "<table>" in output:
-            return "<table>" + output.split("<table>")[1].split("</table>")[0] + "</table>"
+            table_html = output.split("<table>")[1].split("</table>")[0]
+            return '<table id="movieTable">' + table_html + '</table>'
+        
         return f"<div class='ai-text-fallback'>{output}</div>"
     except Exception as e:
-        return f"<p>Connection Error: {str(e)}</p>"
+        return f"<p>Error: {str(e)}</p>"
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     table = ""
     user_input = ""
-    selected_platform = "Select Streaming Service"
-    
     if request.method == 'POST':
         user_input = request.form.get('movie_input', "")
-        selected_platform = request.form.get('platform', "Anywhere")
-        p_query = "Anywhere" if selected_platform == "Select Streaming Service" else selected_platform
-        table = query_ai(user_input, p_query, request.form.get('creativity', "7"))
+        table = query_ai(user_input, request.form.get('platform', "Anywhere"), request.form.get('creativity', "7"))
     
     return render_template_string(HTML_TEMPLATE, table=table, user_input=user_input)
 
@@ -76,7 +72,7 @@ HTML_TEMPLATE = """
         }
         .card { 
             background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(25px); 
-            padding: 35px; border-radius: 24px; width: 460px; 
+            padding: 35px; border-radius: 24px; width: 520px; 
             border: 1px solid rgba(77, 166, 255, 0.3); 
             box-shadow: 0 20px 50px rgba(0,0,0,0.6);
             max-height: 90vh; overflow-y: auto;
@@ -102,10 +98,19 @@ HTML_TEMPLATE = """
             animation: spin 1s linear infinite; display: inline-block; vertical-align: middle;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         .results { margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
+        .sort-info { font-size: 0.75rem; color: #4da6ff; margin-bottom: 10px; font-style: italic; }
+        
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
         th { text-align: left; color: #4da6ff; padding: 10px 5px; border-bottom: 1px solid rgba(77, 166, 255, 0.2); }
+        /* Clickable headers for Match % and Year */
+        th:nth-child(1), th:nth-child(3) { cursor: pointer; text-decoration: underline; }
+        th:hover { color: #fff; }
         td { padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #ddd; vertical-align: top; }
+        
+        /* Highlight high match scores */
+        td:first-child { font-weight: bold; color: #4da6ff; text-shadow: 0 0 5px rgba(77,166,255,0.4); }
     </style>
 </head>
 <body>
@@ -114,7 +119,7 @@ HTML_TEMPLATE = """
         <span class="subtitle">Your AI Film Concierge</span>
         <form method="POST" id="movieForm">
             <label>What movies do you love?</label>
-            <input type="text" name="movie_input" placeholder="Enter movies you like (e.g. Inception, Heat)" value="{{ user_input }}" required>
+            <input type="text" name="movie_input" placeholder="e.g. Inception, Heat" value="{{ user_input }}" required>
             <label>Where are you watching?</label>
             <select name="platform">
                 <option selected disabled>Select Streaming Service</option>
@@ -123,7 +128,6 @@ HTML_TEMPLATE = """
                 <option value="Amazon Prime">Amazon Prime</option>
                 <option value="HBO Max">HBO Max</option>
                 <option value="Disney+">Disney+</option>
-                <option value="Hulu">Hulu</option>
             </select>
             <label>Creativity Level</label>
             <input type="range" name="creativity" min="1" max="10" value="7">
@@ -137,22 +141,51 @@ HTML_TEMPLATE = """
             <div class="spinner"></div>
             <span style="margin-left: 10px; font-size: 0.9rem; color: #4da6ff;">Consulting the Multiverse...</span>
         </div>
+
         {% if table %}
-        <div class="results" id="resultsTable">
-            {{ table|safe }}
+        <div class="results">
+            <div class="sort-info">Default Sort: Highest Match % (Click headers to re-sort)</div>
+            <div id="resultsTable">{{ table|safe }}</div>
         </div>
         {% endif %}
     </div>
+
     <script>
         const form = document.getElementById('movieForm');
         const btn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading-state');
         const results = document.getElementById('resultsTable');
+
         form.onsubmit = function() {
             btn.style.display = 'none';
             loading.style.display = 'block';
             if (results) { results.style.opacity = '0.2'; }
         };
+
+        // Advanced Table Sorter for Match % and Year
+        document.addEventListener('click', function (e) {
+            if (!e.target.matches('#movieTable th')) return;
+            
+            const table = e.target.closest('table');
+            const tbody = table.querySelector('tbody') || table;
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(tr => tr.querySelector('td'));
+            const headerIndex = Array.from(e.target.parentNode.children).indexOf(e.target);
+            
+            // Allow sorting on Match % (0) and Year (2)
+            if (headerIndex !== 0 && headerIndex !== 2) return;
+
+            const isAscending = e.target.classList.contains('th-sort-asc');
+            
+            rows.sort((a, b) => {
+                // Remove % signs or non-numbers for clean sorting
+                const aVal = parseInt(a.children[headerIndex].textContent.replace(/\D/g,'')) || 0;
+                const bVal = parseInt(b.children[headerIndex].textContent.replace(/\D/g,'')) || 0;
+                return isAscending ? (aVal - bVal) : (bVal - aVal);
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+            e.target.classList.toggle('th-sort-asc', !isAscending);
+        });
     </script>
 </body>
 </html>
