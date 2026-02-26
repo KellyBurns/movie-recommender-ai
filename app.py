@@ -32,10 +32,6 @@ LANDING_TEMPLATE = """
 
 <!DOCTYPE html>
 
-LANDING_TEMPLATE = """
-
-<!DOCTYPE html>
-
 <html>
 <head>
 <title>Kelly A. Burns | AI Portfolio</title>
@@ -66,9 +62,9 @@ h1 { font-size: 2.5rem; font-weight: 200; margin: 0; }
 <a href="/app" class="launch-btn">Launch Project</a>
 <div class="tech-stack">
 <h3>Technical Architecture</h3>
-<p>This solo project was architected through a collaborative development process using <b>Gemini 3 Flash</b>.</p>
-<p>The engine utilizes <b>Llama 3.2</b>. To mitigate <b>stochastic randomness</b>, the app exposes a <b>Temperature Parameter</b> (0.1 - 1.0), allowing direct control over the probability distribution of predictions.</p>
-<p>Built on <b>Python/Flask</b>, managed via <b>GitHub</b>, and deployed to <b>Railway</b>.</p>
+<p>This project was architected through a collaborative development process using <b>Gemini 3 Flash</b>.</p>
+<p>The recommendation engine utilizes the <b>Llama 3.2</b> model. To mitigate <b>stochastic randomness</b> and prevent hallucinations, the application exposes a <b>Temperature Parameter</b>. By adjusting the sampling temperature (0.1 to 1.0), the user directly controls the probability distribution of predictions.</p>
+<p>Built on <b>Python/Flask</b> and deployed via <b>Railway</b>.</p>
 </div>
 <div class="copyright">© 2026-2027 Kelly A. Burns. All rights reserved.</div>
 </div>
@@ -88,6 +84,7 @@ body { margin: 0; background: #05070a; background-image: url('/static/space-ai-b
 .card { background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(25px); padding: 35px; border-radius: 24px; width: 550px; border: 1px solid rgba(77, 166, 255, 0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; }
 .back-link { font-size: 0.7rem; color: #4da6ff; text-decoration: none; opacity: 0.6; display: block; margin-bottom: 10px; }
 h2 { color: #4da6ff; margin: 0; font-weight: 300; }
+label { font-size: 0.75rem; opacity: 0.8; display: block; margin-top: 15px; }
 input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; box-sizing: border-box; }
 .btn { background: #4da6ff; color: white; padding: 14px; width: 100%; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 15px; }
 #loading { display: none; margin-top: 20px; text-align: center; color: #4da6ff; }
