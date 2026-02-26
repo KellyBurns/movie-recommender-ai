@@ -4,6 +4,7 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
+# 2026 Stable Router Path
 API_URL = "https://router.huggingface.co/v1/chat/completions"
 HF_TOKEN = os.environ.get('HF_TOKEN')
 
@@ -13,7 +14,7 @@ def query_ai(movies, platform, creativity):
     
     headers = {"Authorization": f"Bearer {HF_TOKEN.strip()}", "Content-Type": "application/json"}
     
-    # We cap the temperature at 0.9 to prevent the "Kanji babble" you saw
+    # Cap temperature to prevent gibberish/hallucinations
     temp = min(float(creativity) / 10.0, 0.9)
     
     payload = {
@@ -21,7 +22,7 @@ def query_ai(movies, platform, creativity):
         "messages": [
             {
                 "role": "system", 
-                "content": "You are a precise movie database API. You MUST return ONLY a valid HTML table. NO MARKDOWN. NO CONVERSATION. ORDER: Match %, Title, Year, Synopsis, Stars, Streaming. For Match %, provide a number followed by %. Ensure the Synopsis is a concise 2-sentence summary in English only."
+                "content": "You are a precise movie database API. Return ONLY a valid HTML table. NO MARKDOWN. NO CONVERSATION. ORDER: Match %, Title, Year, Synopsis, Stars, Streaming. Ensure Synopsis is in English only."
             },
             {
                 "role": "user", 
@@ -29,24 +30,23 @@ def query_ai(movies, platform, creativity):
             }
         ],
         "temperature": temp,
-        "presence_penalty": 0.5, # Discourages the AI from getting stuck in a babble loop
-        "max_tokens": 1200
+        "presence_penalty": 0.5, # Prevents repetitive babble loops
+        "max_tokens": 1400
     }
     
     try:
         response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
         if response.status_code != 200:
-            return f"<div style='color:orange;'>AI is busy. Please try one more time!</div>"
+            return f"<div style='color:orange;'>AI is recalibrating. Try one more time!</div>"
             
         data = response.json()
         output = data['choices'][0]['message']['content']
         
-        # Guardrail: Ensure we only extract the table and nothing else
         if "<table>" in output:
             table_html = output.split("<table>")[1].split("</table>")[0]
             return '<table id="movieTable">' + table_html + '</table>'
         
-        return "<div class='ai-text-fallback'>The AI had a glitch. Please click 'Find My Matches' again to refresh.</div>"
+        return "<div class='ai-text-fallback'>The AI had a glitch. Please refresh and try again.</div>"
     except Exception as e:
         return f"<p>Error: {str(e)}</p>"
 
@@ -64,7 +64,7 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Movie Match Maker</title>
+    <title>Movie Match Maker [BETA]</title>
     <style>
         body { 
             margin: 0; background: #05070a; 
@@ -101,24 +101,21 @@ HTML_TEMPLATE = """
             animation: spin 1s linear infinite; display: inline-block; vertical-align: middle;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         .results { margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
         .sort-info { font-size: 0.75rem; color: #4da6ff; margin-bottom: 10px; font-style: italic; }
-        
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; table-layout: fixed; }
         th { text-align: left; color: #4da6ff; padding: 10px 5px; border-bottom: 1px solid rgba(77, 166, 255, 0.2); }
-        th:nth-child(1), th:nth-child(3) { cursor: pointer; text-decoration: underline; width: 60px; }
-        th:nth-child(2) { width: 120px; }
+        th:nth-child(1), th:nth-child(3) { cursor: pointer; text-decoration: underline; width: 65px; }
+        th:nth-child(2) { width: 110px; }
         th:hover { color: #fff; }
         td { padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #ddd; vertical-align: top; overflow: hidden; }
-        
         td:first-child { font-weight: bold; color: #4da6ff; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>Movie Match Maker (BETA)</h2>
-        <span class="subtitle">Let's Find Your Next Favorite Movie...</span>
+        <h2>Movie Match Maker [BETA]</h2>
+        <span class="subtitle">Let's find your next favorite film...</span>
         <form method="POST" id="movieForm">
             <label>What movies do you love?</label>
             <input type="text" name="movie_input" placeholder="e.g. Inception, Heat" value="{{ user_input }}" required>
@@ -134,8 +131,8 @@ HTML_TEMPLATE = """
             <label>Creativity Level</label>
             <input type="range" name="creativity" min="1" max="10" value="7">
             <div class="range-labels">
-                <span>1: Predictable Hits (Accurate)</span>
-                <span>10: Deep Cuts (Creative)</span>
+                <span>1: Predictable Hits</span>
+                <span>10: Deep Cuts</span>
             </div>
             <button type="submit" class="btn" id="submitBtn">Find My Matches</button>
         </form>
@@ -143,27 +140,23 @@ HTML_TEMPLATE = """
             <div class="spinner"></div>
             <span style="margin-left: 10px; font-size: 0.9rem; color: #4da6ff;">Consulting the Multiverse...</span>
         </div>
-
         {% if table %}
         <div class="results">
-            <div class="sort-info">Default Sort: Highest Match % (Click headers to re-sort)</div>
+            <div class="sort-info">Sort: Match % or Year (Click headers)</div>
             <div id="resultsTable">{{ table|safe }}</div>
         </div>
         {% endif %}
     </div>
-
     <script>
         const form = document.getElementById('movieForm');
         const btn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading-state');
         const results = document.getElementById('resultsTable');
-
         form.onsubmit = function() {
             btn.style.display = 'none';
             loading.style.display = 'block';
             if (results) { results.style.opacity = '0.2'; }
         };
-
         document.addEventListener('click', function (e) {
             if (!e.target.matches('#movieTable th')) return;
             const table = e.target.closest('table');
@@ -183,3 +176,8 @@ HTML_TEMPLATE = """
     </script>
 </body>
 </html>
+"""
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
