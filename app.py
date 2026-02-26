@@ -56,9 +56,7 @@ def home():
     if request.method == 'POST':
         user_input = request.form.get('movie_input', "")
         selected_platform = request.form.get('platform', "Anywhere")
-        # Default to Anywhere if they leave it on the prompt
         p_query = "Anywhere" if selected_platform == "Select Streaming Service" else selected_platform
-        
         table = query_ai(user_input, p_query, request.form.get('creativity', "7"))
     
     return render_template_string(HTML_TEMPLATE, table=table, user_input=user_input)
@@ -78,7 +76,7 @@ HTML_TEMPLATE = """
         }
         .card { 
             background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(25px); 
-            padding: 35 swpx; border-radius: 24px; width: 460px; 
+            padding: 35px; border-radius: 24px; width: 460px; 
             border: 1px solid rgba(77, 166, 255, 0.3); 
             box-shadow: 0 20px 50px rgba(0,0,0,0.6);
             max-height: 90vh; overflow-y: auto;
@@ -114,14 +112,12 @@ HTML_TEMPLATE = """
     <div class="card">
         <h2>Movie Match Maker</h2>
         <span class="subtitle">Your AI Film Concierge</span>
-        
         <form method="POST" id="movieForm">
             <label>What movies do you love?</label>
-            <input type="text" name="movie_input" placeholder="Enter movies you like (e.g. Jeepers Creepers, Heat)" value="{{ user_input }}" required>
-            
+            <input type="text" name="movie_input" placeholder="Enter movies you like (e.g. Inception, Heat)" value="{{ user_input }}" required>
             <label>Where are you watching?</label>
             <select name="platform">
-                <option>Select Streaming Service</option>
+                <option selected disabled>Select Streaming Service</option>
                 <option value="Anywhere">Anywhere</option>
                 <option value="Netflix">Netflix</option>
                 <option value="Amazon Prime">Amazon Prime</option>
@@ -129,42 +125,39 @@ HTML_TEMPLATE = """
                 <option value="Disney+">Disney+</option>
                 <option value="Hulu">Hulu</option>
             </select>
-            
             <label>Creativity Level</label>
             <input type="range" name="creativity" min="1" max="10" value="7">
             <div class="range-labels">
                 <span>1: Predictable Hits (Accurate)</span>
                 <span>10: Deep Cuts (Creative)</span>
             </div>
-            
             <button type="submit" class="btn" id="submitBtn">Find My Matches</button>
         </form>
-
         <div id="loading-state">
             <div class="spinner"></div>
             <span style="margin-left: 10px; font-size: 0.9rem; color: #4da6ff;">Consulting the Multiverse...</span>
         </div>
-
         {% if table %}
         <div class="results" id="resultsTable">
             {{ table|safe }}
         </div>
         {% endif %}
     </div>
-
     <script>
         const form = document.getElementById('movieForm');
         const btn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading-state');
         const results = document.getElementById('resultsTable');
-
         form.onsubmit = function() {
             btn.style.display = 'none';
             loading.style.display = 'block';
-            if (results) {
-                results.style.opacity = '0.2';
-            }
+            if (results) { results.style.opacity = '0.2'; }
         };
     </script>
 </body>
 </html>
+"""
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
