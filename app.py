@@ -4,57 +4,58 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# UPDATED: Using the definitive Inference API path which is more reliable than the router for Mistral
-API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
+# UPDATED: The new official Router URL format
+API_URL = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3"
 HF_TOKEN = os.environ.get('HF_TOKEN')
 
 def query_ai(movies, platform, creativity):
     if not HF_TOKEN:
         return "<p style='color:red;'>Error: HF_TOKEN variable is missing in Railway!</p>"
     
+    # Updated headers for the Router system
     headers = {
-        "Authorization": f"Bearer {HF_TOKEN}",
+        "Authorization": f"Bearer {HF_TOKEN.strip()}",
         "Content-Type": "application/json",
         "X-Wait-For-Model": "true"
     }
     
     temp = float(creativity) / 10.0
-    # Mistral v0.3 likes this specific prompt format
-    prompt = f"<s>[INST] Recommend 10 movies for someone who likes: {movies}. Preferred Platform: {platform}. Return ONLY an HTML table with columns: Title, Synopsis, Stars, and Streaming. No conversational text. [/INST]"
+    # Ensuring the prompt is clean and follows Mistral's instruction format
+    prompt = f"<s>[INST] Recommend 10 movies for someone who likes: {movies}. Preferred Platform: {platform}. Return ONLY an HTML table with Title, Synopsis, Stars, and Streaming. No chatter. [/INST]"
     
     payload = {
         "inputs": prompt, 
         "parameters": {
             "temperature": temp, 
-            "max_new_tokens": 1200,
-            "return_full_text": False
+            "max_new_tokens": 1200
         }
     }
     
     try:
-        # 110-second timeout to allow the model to load into memory
+        # Increase timeout to 110s for the new router's processing time
         response = requests.post(API_URL, headers=headers, json=payload, timeout=110)
         
+        # This will help us see if it's a token issue or a path issue
         if response.status_code != 200:
-            return f"<p style='color:orange;'>AI Status {response.status_code}: {response.text}</p>"
+            return f"<p style='color:orange;'>AI Router Status {response.status_code}: {response.text}</p>"
             
         data = response.json()
         
-        # Handle the loading state
+        # Router loading state handling
         if isinstance(data, dict) and "estimated_time" in data:
             wait = int(data['estimated_time'])
-            return f"<div style='color:#4da6ff;'>AI is warming up (ready in {wait}s). Please click 'Find My Matches' again!</div>"
+            return f"<div style='color:#4da6ff;'>The AI is being routed and warmed up (ready in {wait}s). Please click 'Find My Matches' again!</div>"
 
-        # Extracting the table from the response
+        # Parsing the generated table
         if isinstance(data, list) and len(data) > 0:
             output = data[0].get('generated_text', "")
             if "<table>" in output:
                 return "<table>" + output.split("<table>")[1].split("</table>")[0] + "</table>"
-            return f"<p>AI found results but didn't format the table. Click 'Find My Matches' again.</p>"
+            return f"<p>AI results arrived but were not in table format. Please try one more time!</p>"
         
-        return "<p>The AI is ready. Please click the button one more time!</p>"
+        return "<p>The AI is ready. Please click the button again to see your results!</p>"
     except Exception as e:
-        return f"<p>Request failed: {str(e)}. Please wait 10 seconds and try again.</p>"
+        return f"<p>Connection Error: {str(e)}. Please wait 15 seconds and try again.</p>"
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
