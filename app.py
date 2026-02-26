@@ -69,30 +69,111 @@ LANDING_TEMPLATE = """
 <head>
     <title>Kelly A. Burns | AI Portfolio</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap');
+        
         body { 
-            margin: 0; background: #05070a; background-image: url('/static/space-ai-bg.jpg'); 
-            background-size: cover; background-attachment: fixed; color: white; font-family: 'Inter', sans-serif; 
-            display: flex; justify-content: flex-end; align-items: center; min-height: 100vh; padding-right: 5%;
+            margin: 0; 
+            background: #05070a; 
+            color: white; 
+            font-family: 'Inter', sans-serif; 
+            display: flex; 
+            justify-content: flex-end; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding-right: 5%;
+            background-image: radial-gradient(circle at 20% 30%, #1a2a44 0%, #05070a 100%);
         }
-        .card { background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(20px); padding: 50px; border-radius: 24px; width: 450px; border: 1px solid rgba(77, 166, 255, 0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .tagline { font-size: 0.9rem; color: #4da6ff; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
-        h1 { font-size: 2.5rem; font-weight: 200; margin: 0; }
-        .description { font-size: 1.1rem; opacity: 0.7; margin: 15px 0 35px 0; font-weight: 300; }
-        .launch-btn { background: linear-gradient(135deg, #4da6ff, #0066cc); color: white; padding: 18px 40px; border-radius: 50px; text-decoration: none; display: inline-block; font-weight: bold; transition: 0.3s; }
-        .launch-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(77,166,255,0.4); }
-        .copyright { margin-top: 40px; font-size: 0.7rem; opacity: 0.4; letter-spacing: 0.5px; }
+
+        .card { 
+            background: rgba(10, 15, 25, 0.8); 
+            backdrop-filter: blur(10px);
+            padding: 40px; 
+            border-radius: 24px; 
+            width: 550px; 
+            border: 1px solid rgba(77, 166, 255, 0.2); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        h1 { font-size: 3rem; font-weight: 200; margin: 0 0 10px 0; letter-spacing: -1px; }
+        .tagline { color: #4da6ff; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 30px; }
+
+        .launch-btn { 
+            background: linear-gradient(135deg, #4da6ff, #0066cc); 
+            color: white; 
+            padding: 16px 35px; 
+            border-radius: 50px; 
+            text-decoration: none; 
+            display: inline-block; 
+            font-weight: bold; 
+            margin-bottom: 40px;
+            transition: transform 0.2s;
+        }
+        .launch-btn:hover { transform: scale(1.05); }
+
+        .tech-section { 
+            border-top: 1px solid rgba(255, 255, 255, 0.1); 
+            padding-top: 25px;
+        }
+
+        h2 { font-size: 1.2rem; color: #4da6ff; margin-bottom: 15px; font-weight: 700; }
+        h3 { font-size: 0.9rem; margin: 20px 0 8px 0; color: rgba(255,255,255,0.9); }
+        
+        p { 
+            font-size: 0.85rem; 
+            line-height: 1.6; 
+            color: rgba(255, 255, 255, 0.7); 
+            margin-bottom: 15px; 
+        }
+
+        .audit-highlight {
+            background: rgba(77, 166, 255, 0.1);
+            border-left: 3px solid #4da6ff;
+            padding: 10px 15px;
+            font-style: italic;
+            margin: 15px 0;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.75rem;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="tagline">AI Portfolio</div>
         <h1>Kelly A. Burns</h1>
         <p class="description">Explorations in AI Development</p>
+        
         <a href="/app" class="launch-btn">Launch Project</a>
-        <div class="copyright">© 2026-2027 Kelly A. Burns. All rights reserved.</div>
+
+        <div class="tech-section">
+            <h2>Technical Architecture</h2>
+            
+            <h3>Human-In-The-Loop Collaboration</h3>
+            <p>I architected this solo project through an AI-augmented development process to accelerate prototyping. By employing Gemini 3 Flash for high-order logic, I bridged the gap between back-end infrastructure and front-end user experience.</p>
+            
+            <div class="audit-highlight">
+                I maintained a strict manual audit layer, correcting recursive context-loss issues—such as repeated dropping of environment port configurations and prompt logic—to ensure system stability.
+            </div>
+
+            <h3>Tech Stack</h3>
+            <p>Built on a <b>Python/Flask</b> micro-framework. Version control is managed via <b>GitHub</b> with an automated <b>CI/CD pipeline</b> deploying to a cloud-native <b>Railway</b> environment. All UI/UX is proprietary design.</p>
+
+            <h3>The Engine (Llama 3.2)</h3>
+            <p>Utilizes Llama 3.2 via <b>Hugging Face API</b> for advanced zero-shot reasoning. To manage stochastic randomness and prevent hallucinations, I implemented a <b>Temperature Parameter (0.1 - 1.0)</b>, allowing user-level control over prediction probability distributions.</p>
+        </div>
+
+        <div class="footer">
+            Palm Desert, CA | <a href="mailto:kelly@kellyaburns.com" style="color:#4da6ff; text-decoration:none;">kelly@kellyaburns.com</a><br>
+            &copy; 2026 Kelly A. Burns. All Rights Reserved. Verified Project.
+        </div>
     </div>
 </body>
 </html>
+
 """
 
 APP_TEMPLATE = """
