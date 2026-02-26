@@ -175,7 +175,7 @@ body {
 
         <div class="footer">
             Palm Desert, CA | <a href="mailto:KBurnsDirect@gmail.com" style="color:#4da6ff; text-decoration:none;">KBurnsDirect@gmail.com</a><br>
-            LinkedIn: <a href="https://www.linkedin.com/in/kellyburns-pm">https://www.linkedin.com/in/kellyburns-pm</a><br>
+            LinkedIn: <a href="https://www.linkedin.com/in/kellyburns-pm" style="color:#4da6ff; text-decoration:none;">https://www.linkedin.com/in/kellyburns-pm</a><br>
             &copy; 2026 Kelly A. Burns. All Rights Reserved. Verified Project.
         </div>
     </div>
