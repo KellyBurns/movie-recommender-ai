@@ -173,11 +173,6 @@ body {
             <p>Utilizes Llama 3.2 via <b>Hugging Face API</b> for advanced zero-shot reasoning. To manage stochastic randomness and prevent hallucinations, I implemented a <b>Temperature Parameter (0.1 - 1.0)</b>, allowing user-level control over prediction probability distributions.</p>
         </div>
 
-        <div class="footer">
-            Palm Desert, CA | <a href="mailto:KBurnsDirect@gmail.com" style="color:#4da6ff; text-decoration:none;">KBurnsDirect@gmail.com</a><br>
-            LinkedIn: <a href="https://www.linkedin.com/in/kellyburns-pm" style="color:#4da6ff; text-decoration:none;">https://www.linkedin.com/in/kellyburns-pm</a><br>
-            &copy; 2026 Kelly A. Burns. All Rights Reserved. Verified Project.
-        </div>
 
     <div class="footer">
         Palm Desert, CA | <a href="mailto:KBurnsDirect@gmail.com" target="_blank" style="color:#4da6ff; text-decoration:none;">KBurnsDirect@gmail.com</a><br>
