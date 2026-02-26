@@ -75,7 +75,7 @@ LANDING_TEMPLATE = """
 
 body { 
             margin: 0; 
-            background-color: #05070a; 
+            background-color: #05070a; /* Fallback color */
             color: white; 
             font-family: 'Inter', sans-serif; 
             display: flex; 
@@ -83,10 +83,13 @@ body {
             align-items: center; 
             min-height: 100vh; 
             padding-right: 5%;
-            /* This creates the 'Image' effect without a file */
-            background-image: radial-gradient(circle at 20% 30%, #1a2a44 0%, #05070a 100%);
-            background-repeat: no-repeat;
+            
+            /* Hard-coded to the static folder */
+            background-image: url('/static/space-ai-bg.jpg');
+            background-size: cover;
+            background-position: center;
             background-attachment: fixed;
+            background-repeat: no-repeat;
         }
 
         
