@@ -4,7 +4,7 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# UPDATED: The definitive 2026 Router path
+# The most stable 2026 Router endpoint
 API_URL = "https://router.huggingface.co/hf-inference/v1/chat/completions"
 HF_TOKEN = os.environ.get('HF_TOKEN')
 
@@ -17,33 +17,33 @@ def query_ai(movies, platform, creativity):
         "Content-Type": "application/json"
     }
     
-    temp = float(creativity) / 10.0
-    
+    # We'll try the Nemo model - highly stable in 2026
     payload = {
-        "model": "mistralai/Mistral-7B-Instruct-v0.3",
+        "model": "mistralai/Mistral-Nemo-Instruct-2407",
         "messages": [
-            {"role": "system", "content": "You are a movie expert. Return ONLY an HTML table. No conversation."},
-            {"role": "user", "content": f"Recommend 10 movies for a fan of {movies} on {platform}. Table columns: Title, Synopsis, Stars, Streaming."}
+            {"role": "system", "content": "Return ONLY an HTML table. No text."},
+            {"role": "user", "content": f"Recommend 10 movies for fans of {movies} on {platform}."}
         ],
-        "temperature": temp,
-        "max_tokens": 1000
+        "temperature": float(creativity) / 10.0,
+        "max_tokens": 800
     }
     
     try:
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=110)
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
         
+        if response.status_code == 404:
+            return f"<div style='color:orange;'><b>Router Error 404:</b> Model not found. <br><small>Try changing the 'model' string in app.py to 'meta-llama/Llama-3.2-3B-Instruct'</small></div>"
+            
         if response.status_code != 200:
-            return f"<div style='color:orange;'><b>AI Error {response.status_code}:</b><br>{response.text}</div>"
+            return f"<div style='color:orange;'><b>AI Error {response.status_code}:</b> {response.text}</div>"
             
         data = response.json()
+        output = data['choices'][0]['message']['content']
         
-        if 'choices' in data and len(data['choices']) > 0:
-            output = data['choices'][0]['message']['content']
-            if "<table>" in output:
-                return "<table>" + output.split("<table>")[1].split("</table>")[0] + "</table>"
-            return f"<div class='results-area'>{output}</div>"
-        
-        return "<p>AI is warming up. Please click again in 5 seconds!</p>"
+        if "<table>" in output:
+            return "<table>" + output.split("<table>")[1].split("</table>")[0] + "</table>"
+        return f"<div class='results-area'>{output}</div>"
+
     except Exception as e:
         return f"<p>Technical Error: {str(e)}</p>"
 
@@ -51,77 +51,42 @@ def query_ai(movies, platform, creativity):
 def home():
     table = ""
     user_input = ""
-    selected_platform = "Anywhere"
-    selected_creativity = "5"
-
     if request.method == 'POST':
         user_input = request.form.get('movie_input', "")
-        selected_platform = request.form.get('platform', "Anywhere")
-        selected_creativity = request.form.get('creativity', "5")
-        table = query_ai(user_input, selected_platform, selected_creativity)
+        table = query_ai(user_input, request.form.get('platform', "Anywhere"), request.form.get('creativity', "5"))
     
-    return render_template_string(HTML_TEMPLATE, table=table, user_input=user_input, selected_platform=selected_platform, selected_creativity=selected_creativity)
+    return render_template_string(HTML_TEMPLATE, table=table, user_input=user_input)
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Movie Match Maker AI</title>
+    <title>Movie AI</title>
     <style>
-        body { 
-            margin: 0; 
-            background: #0b0d17; 
-            background-image: url('/static/space-ai-bg.jpg');
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            background-position: center;
-            background-size: cover; 
-            color: white; 
-            font-family: 'Segoe UI', sans-serif; 
-            height: 100vh; 
-            display: flex; 
-            justify-content: flex-end; 
-            align-items: center; 
-            padding-right: 5%; 
-        }
-        .glass-card { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); width: 420px; max-height: 90vh; overflow-y: auto; text-align: center; }
-        h1 { color: #4da6ff; margin-bottom: 5px; }
-        input[type="text"], select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #4da6ff; background: rgba(255,255,255,0.1); color: white; box-sizing: border-box; }
-        .btn { background: #4da6ff; color: white; padding: 15px; width: 100%; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .results-area { margin-top: 30px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; font-size: 0.8rem; border: 1px solid #4da6ff; }
+        body { margin: 0; background: #0b0d17; background-image: url('/static/space-ai-bg.jpg'); background-size: cover; color: white; font-family: sans-serif; height: 100vh; display: flex; justify-content: flex-end; align-items: center; padding-right: 5%; }
+        .card { background: rgba(0,0,0,0.8); padding: 30px; border-radius: 20px; width: 400px; border: 1px solid #4da6ff; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #4da6ff; background: #111; color: white; }
+        .btn { background: #4da6ff; color: white; padding: 12px; width: 100%; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        .results { margin-top: 20px; font-size: 0.8rem; max-height: 300px; overflow: auto; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid rgba(255,255,255,0.1); padding: 8px; }
-        th { color: #4da6ff; }
+        td, th { border: 1px solid #333; padding: 5px; }
     </style>
 </head>
 <body>
-    <div class="glass-card">
-        <h1>Movie Match Maker AI</h1>
-        <form method="POST" id="mainForm">
-            <input type="text" name="movie_input" placeholder="Movies you love..." value="{{ user_input }}" required>
-            <select name="platform">
-                <option value="Anywhere">Anywhere</option>
-                <option value="Netflix">Netflix</option>
-                <option value="Amazon Prime">Amazon Prime</option>
-            </select>
-            <label style="display:block; margin-top:15px; font-size:0.9rem;">Creativity: {{ selected_creativity }}</label>
-            <input type="range" name="creativity" min="1" max="10" value="{{ selected_creativity }}" style="width:100%;">
-            <button type="submit" class="btn" id="submitBtn">Find My Matches</button>
+    <div class="card">
+        <h2>Movie Match Maker</h2>
+        <form method="POST">
+            <input type="text" name="movie_input" placeholder="Movies you like..." value="{{ user_input }}" required>
+            <select name="platform"><option>Anywhere</option><option>Netflix</option></select>
+            <input type="range" name="creativity" min="1" max="10" value="5">
+            <button type="submit" class="btn">Find My Matches</button>
         </form>
-        {% if table %}<div class="results-area">{{ table|safe }}</div>{% endif %}
+        {% if table %}<div class="results">{{ table|safe }}</div>{% endif %}
     </div>
-    <script>
-        document.getElementById('mainForm').onsubmit = function() {
-            document.getElementById('submitBtn').innerHTML = "Consulting AI...";
-        };
-    </script>
 </body>
 </html>
 """
 
-# --- THE ESSENTIAL ENGINE STARTUP ---
 if __name__ == "__main__":
-    # This line connects Railway's assigned port to your app
     port = int(os.environ.get("PORT", 8080))
-    # This line tells the app to listen to the whole internet (0.0.0.0)
     app.run(host='0.0.0.0', port=port)
