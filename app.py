@@ -67,6 +67,7 @@ LANDING_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelly A. Burns | AI Portfolio</title>
     
     <style>
