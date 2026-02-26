@@ -4,59 +4,52 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# UPDATED: The exact specific URL format for the new Hugging Face Router
-API_URL = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3"
+# UPDATED: Using the flagship Nemo model and the base router path
+API_URL = "https://router.huggingface.co/hf-inference/v1/chat/completions"
 HF_TOKEN = os.environ.get('HF_TOKEN')
 
 def query_ai(movies, platform, creativity):
     if not HF_TOKEN:
-        return "<p style='color:red;'>Error: HF_TOKEN variable is missing in Railway!</p>"
+        return "<p style='color:red;'>Error: HF_TOKEN missing in Railway!</p>"
     
     headers = {
         "Authorization": f"Bearer {HF_TOKEN.strip()}",
-        "Content-Type": "application/json",
-        "X-Wait-For-Model": "true"
+        "Content-Type": "application/json"
     }
     
     temp = float(creativity) / 10.0
-    # Prompt formatted for Mistral v0.3
-    prompt = f"<s>[INST] Recommend 10 movies for someone who likes: {movies}. Preferred Platform: {platform}. Return ONLY an HTML table with Title, Synopsis, Stars, and Streaming. No chatter. [/INST]"
     
+    # We use the Chat Completion format (standard for the 2026 Router)
     payload = {
-        "inputs": prompt, 
-        "parameters": {
-            "temperature": temp, 
-            "max_new_tokens": 1200,
-            "return_full_text": False
-        }
+        "model": "mistralai/Mistral-Nemo-Instruct-2407",
+        "messages": [
+            {
+                "role": "user", 
+                "content": f"Recommend 10 movies for a fan of {movies} on {platform}. Return ONLY an HTML table with Title, Synopsis, Stars, and Streaming. No talk."
+            }
+        ],
+        "temperature": temp,
+        "max_tokens": 1000
     }
     
     try:
-        # Long timeout for the initial model "thaw"
         response = requests.post(API_URL, headers=headers, json=payload, timeout=110)
         
         if response.status_code != 200:
-            return f"<p style='color:orange;'>AI Status {response.status_code}: {response.text}</p>"
+            return f"<p style='color:orange;'>AI Router Status {response.status_code}: {response.text}</p>"
             
         data = response.json()
         
-        # Handle loading state
-        if isinstance(data, dict) and "estimated_time" in data:
-            wait = int(data['estimated_time'])
-            return f"<div style='color:#4da6ff;'>The AI is warming up (ready in {wait}s). Please wait and click 'Find My Matches' again!</div>"
-
-        # Parse the result
-        if isinstance(data, list) and len(data) > 0:
-            output = data[0].get('generated_text', "")
+        # New Router format: data['choices'][0]['message']['content']
+        if 'choices' in data and len(data['choices']) > 0:
+            output = data['choices'][0]['message']['content']
             if "<table>" in output:
-                # Cleaning the output to ensure only the table is rendered
-                table_html = "<table>" + output.split("<table>")[1].split("</table>")[0] + "</table>"
-                return table_html
-            return f"<p>AI results arrived but were not in table format. Please try one more time!</p>"
+                return "<table>" + output.split("<table>")[1].split("</table>")[0] + "</table>"
+            return f"<p>AI results arrived but no table was found. Click again!</p>"
         
-        return "<p>The AI is ready. Please click the button again!</p>"
+        return "<p>AI is thinking... please click again in 5 seconds.</p>"
     except Exception as e:
-        return f"<p>Connection Error: {str(e)}. Please wait 15 seconds and try again.</p>"
+        return f"<p>Connection Error: {str(e)}</p>"
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -95,7 +88,7 @@ HTML_TEMPLATE = """
             align-items: center; 
             padding-right: 5%; 
         }
-        .glass-card { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); width: 420px; max-height: 90vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .glass-card { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); width: 420px; max-height: 90vh; overflow-y: auto; text-align: center; }
         h1 { color: #4da6ff; margin-bottom: 5px; }
         input[type="text"], select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #4da6ff; background: rgba(255,255,255,0.1); color: white; box-sizing: border-box; }
         select option { background: #222; color: white; }
@@ -127,7 +120,7 @@ HTML_TEMPLATE = """
     <script>
         document.getElementById('mainForm').onsubmit = function() {
             var btn = document.getElementById('submitBtn');
-            btn.innerHTML = "Thinking... (Up to 60s)";
+            btn.innerHTML = "Consulting AI...";
         };
     </script>
 </body>
