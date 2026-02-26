@@ -163,10 +163,8 @@ body {
             
             <h3>Human-In-The-Loop Collaboration</h3>
             <p>I architected this solo project through an AI-augmented development process to accelerate prototyping. By employing Gemini 3 Flash for high-order logic, I bridged the gap between back-end infrastructure and front-end user experience.</p>
-            
-            <div class="audit-highlight">
-                I maintained a strict manual audit layer, correcting recursive context-loss issues—such as repeated dropping of environment port configurations and prompt logic—to ensure system stability.
-            </div>
+            <p> I maintained a strict manual audit layer, correcting recursive context-loss issues—such as repeated dropping of environment port configurations and prompt logic—to ensure system stability.
+            </p>
 
             <h3>Tech Stack</h3>
             <p>Built on a <b>Python/Flask</b> micro-framework. Version control is managed via <b>GitHub</b> with an automated <b>CI/CD pipeline</b> deploying to a cloud-native <b>Railway</b> environment. All UI/UX is proprietary design.</p>
@@ -176,7 +174,8 @@ body {
         </div>
 
         <div class="footer">
-            Palm Desert, CA | <a href="mailto:kelly@kellyaburns.com" style="color:#4da6ff; text-decoration:none;">kelly@kellyaburns.com</a><br>
+            Palm Desert, CA | <a href="mailto:KBurnsDirect@gmail.com" style="color:#4da6ff; text-decoration:none;">KBurnsDirect@gmail.com</a><br>
+            LinkedIn: <a href="https://www.linkedin.com/in/kellyburns-pm">https://www.linkedin.com/in/kellyburns-pm</a><br>
             &copy; 2026 Kelly A. Burns. All Rights Reserved. Verified Project.
         </div>
     </div>
