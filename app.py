@@ -69,7 +69,6 @@ LANDING_TEMPLATE = """
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelly A. Burns | AI Portfolio</title>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap');
 body { 
@@ -197,6 +196,7 @@ APP_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Match Maker [BETA]</title>
     <style>
         body { margin: 0; background: #05070a; background-image: url('/static/space-ai-bg.jpg'); background-size: cover; background-attachment: fixed; color: white; font-family: 'Inter', sans-serif; display: flex; justify-content: flex-end; align-items: center; min-height: 100vh; padding-right: 5%; }
