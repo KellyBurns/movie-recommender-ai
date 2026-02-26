@@ -1,5 +1,6 @@
 import os
 import requests
+import time
 from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
@@ -9,7 +10,8 @@ API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Inst
 headers = {
     "Authorization": f"Bearer {os.environ.get('HF_TOKEN')}",
     "Content-Type": "application/json",
-    "X-Wait-For-Model": "true"
+    "X-Wait-For-Model": "true", # Crucial for "cold starts"
+    "X-Use-Cache": "false"
 }
 
 def query_ai(movies, platform, creativity):
@@ -17,7 +19,7 @@ def query_ai(movies, platform, creativity):
         return "Please enter at least one movie title."
 
     temp = float(creativity) / 10.0
-    prompt = f"[INST] User likes: {movies}. Preferred Platform: {platform}. Provide 10 recommendations. Format ONLY as an HTML table with columns: Title, Synopsis, Top 3 Stars, Streaming On. [/INST]"
+    prompt = f"<s>[INST] User likes: {movies}. Preferred Platform: {platform}. Provide 10 recommendations. Format ONLY as an HTML table with columns: Title, Synopsis, Top 3 Stars, Streaming On. [/INST]"
     
     payload = {
         "inputs": prompt, 
@@ -25,24 +27,29 @@ def query_ai(movies, platform, creativity):
     }
     
     try:
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=90)
+        # We set a long timeout here to match our new Gunicorn setting
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=110)
         data = response.json()
         
+        # If the AI is still loading, Hugging Face returns an 'estimated_time'
+        if isinstance(data, dict) and "estimated_time" in data:
+            wait_time = int(data['estimated_time'])
+            return f"The AI is <b>{wait_time}s</b> away from waking up. Please wait a moment and click 'Find My Matches' again!"
+
         if isinstance(data, list) and len(data) > 0:
             output = data[0].get('generated_text', "")
             if "<table>" in output:
                 return "<table>" + output.split("<table>")[1].split("</table>")[0] + "</table>"
-            return "The AI woke up but didn't build the table correctly. Click find again!"
+            return "AI returned results, but they weren't in a table. Try clicking once more!"
         
-        return "The AI is still waking up. Please click 'Find My Matches' again in 10 seconds!"
+        return "The AI is almost ready. Please click 'Find My Matches' one more time!"
     
-    except Exception:
-        return "Connection timed out. The AI is still loading—please click the button again."
+    except Exception as e:
+        return f"The server is taking a long time to respond. This is normal for the first run! Please wait 15 seconds and try clicking again."
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     table = ""
-    # We capture these so we can send them back to the form
     user_input = ""
     selected_platform = "Anywhere"
     selected_creativity = "5"
@@ -73,22 +80,21 @@ HTML_TEMPLATE = """
         select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #4da6ff; background: rgba(255,255,255,0.1); color: white; cursor: pointer; }
         select option { background-color: white !important; color: black !important; }
         input[type="text"] { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.1); color: white; box-sizing: border-box; }
-        .btn { background: #4da6ff; color: white; padding: 15px; width: 100%; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .btn:disabled { background: #555; cursor: not-allowed; }
-        .results-area { margin-top: 30px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; }
+        .btn { background: #4da6ff; color: white; padding: 15px; width: 100%; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        .btn:hover { background: #007bff; }
+        .results-area { margin-top: 30px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 1px solid rgba(77, 166, 255, 0.3); }
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        th, td { border: 1px solid rgba(255,255,255,0.1); padding: 8px; text-align: left; }
+        th, td { border: 1px solid rgba(255,255,255,0.1); padding: 8px; text-align: left; vertical-align: top; }
         th { color: #4da6ff; background: rgba(77, 166, 255, 0.1); }
     </style>
 </head>
 <body>
     <div class="glass-card">
         <h1>Movie Match Maker AI</h1>
-        <p style="opacity: 0.7;">Finding your next favorite film...</p>
+        <p style="opacity: 0.7;">Your AI Cinema Concierge</p>
         
         <form method="POST" id="mainForm">
-            <input type="text" name="movie_input" placeholder="Enter movies you love..." value="{{ user_input }}" required>
-            
+            <input type="text" name="movie_input" placeholder="Enter movies (e.g. Inception, Heat)" value="{{ user_input }}" required>
             <select name="platform">
                 <option value="Anywhere" {% if selected_platform == 'Anywhere' %}selected{% endif %}>Anywhere</option>
                 <option value="Netflix" {% if selected_platform == 'Netflix' %}selected{% endif %}>Netflix</option>
@@ -97,10 +103,8 @@ HTML_TEMPLATE = """
                 <option value="Disney+" {% if selected_platform == 'Disney+' %}selected{% endif %}>Disney+</option>
                 <option value="Hulu" {% if selected_platform == 'Hulu' %}selected{% endif %}>Hulu</option>
             </select>
-            
             <label style="display:block; margin-top:15px; font-size:0.9rem;">Creativity Level: {{ selected_creativity }}</label>
             <input type="range" name="creativity" min="1" max="10" value="{{ selected_creativity }}" style="width:100%;">
-            
             <button type="submit" class="btn" id="submitBtn">Find My Matches</button>
         </form>
 
@@ -114,14 +118,9 @@ HTML_TEMPLATE = """
     <script>
         document.getElementById('mainForm').onsubmit = function() {
             var btn = document.getElementById('submitBtn');
-            btn.innerHTML = "Consulting the AI... (Up to 60s)";
-            btn.disabled = true;
+            btn.innerHTML = "Thinking... Please wait 30-60 seconds.";
+            btn.style.opacity = "0.6";
         };
     </script>
 </body>
 </html>
-"""
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
