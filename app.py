@@ -71,9 +71,11 @@ LANDING_TEMPLATE = """
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap');
         
-        body { 
+
+
+body { 
             margin: 0; 
-            background: #05070a; 
+            background: #05070a; /* Fallback color */
             color: white; 
             font-family: 'Inter', sans-serif; 
             display: flex; 
@@ -81,9 +83,12 @@ LANDING_TEMPLATE = """
             align-items: center; 
             min-height: 100vh; 
             padding-right: 5%;
+            /* This is the line that creates the depth */
             background-image: radial-gradient(circle at 20% 30%, #1a2a44 0%, #05070a 100%);
+            background-attachment: fixed;
         }
 
+        
         .card { 
             background: rgba(10, 15, 25, 0.8); 
             backdrop-filter: blur(10px);
