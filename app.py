@@ -70,7 +70,7 @@ LANDING_TEMPLATE = """
     <title>Kelly A. Burns | AI Portfolio</title>
     <style>
         body { 
-            margin: 0; background: #05070a; background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2072'); 
+            margin: 0; background: #05070a; background-image: url('/static/space-ai-bg.jpg'); 
             background-size: cover; background-attachment: fixed; color: white; font-family: 'Inter', sans-serif; 
             display: flex; justify-content: flex-end; align-items: center; min-height: 100vh; padding-right: 5%;
         }
@@ -80,7 +80,7 @@ LANDING_TEMPLATE = """
         .description { font-size: 1.1rem; opacity: 0.7; margin: 15px 0 35px 0; font-weight: 300; }
         .launch-btn { background: linear-gradient(135deg, #4da6ff, #0066cc); color: white; padding: 18px 40px; border-radius: 50px; text-decoration: none; display: inline-block; font-weight: bold; transition: 0.3s; }
         .launch-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(77,166,255,0.4); }
-        .copyright { margin-top: 40px; font-size: 0.65rem; opacity: 0.3; }
+        .copyright { margin-top: 40px; font-size: 0.7rem; opacity: 0.4; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
@@ -89,7 +89,7 @@ LANDING_TEMPLATE = """
         <h1>Kelly A. Burns</h1>
         <p class="description">Explorations in AI Development</p>
         <a href="/app" class="launch-btn">Launch Project</a>
-        <div class="copyright">All work copyright 2026-2030</div>
+        <div class="copyright">© 2026-2027 Kelly A. Burns. All rights reserved.</div>
     </div>
 </body>
 </html>
@@ -101,7 +101,7 @@ APP_TEMPLATE = """
 <head>
     <title>Movie Match Maker [BETA]</title>
     <style>
-        body { margin: 0; background: #05070a; background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2072'); background-size: cover; background-attachment: fixed; color: white; font-family: 'Inter', sans-serif; display: flex; justify-content: flex-end; align-items: center; min-height: 100vh; padding-right: 5%; }
+        body { margin: 0; background: #05070a; background-image: url('/static/space-ai-bg.jpg'); background-size: cover; background-attachment: fixed; color: white; font-family: 'Inter', sans-serif; display: flex; justify-content: flex-end; align-items: center; min-height: 100vh; padding-right: 5%; }
         .card { background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(25px); padding: 35px; border-radius: 24px; width: 550px; border: 1px solid rgba(77, 166, 255, 0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; }
         .back-link { font-size: 0.7rem; color: #4da6ff; text-decoration: none; opacity: 0.6; display: block; margin-bottom: 10px; }
         h2 { color: #4da6ff; margin: 0; font-weight: 300; }
@@ -142,9 +142,9 @@ APP_TEMPLATE = """
                 <option value="Amazon Prime">Amazon Prime</option>
                 <option value="HBO Max">HBO Max</option>
             </select>
-            <button type="submit" class="btn">Analyze Taste Vectors</button>
+            <button type="submit" class="btn">Find My Matches</button>
         </form>
-        <div id="loading">Triangulating recommendations...</div>
+        <div id="loading">Consulting the Multiverse...</div>
         {% if table %}<div id="results">{{ table|safe }}</div>{% endif %}
     </div>
     <script>
@@ -157,7 +157,6 @@ APP_TEMPLATE = """
 </html>
 """
 
-# FINAL PORT BINDING FOR PRODUCTION
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
