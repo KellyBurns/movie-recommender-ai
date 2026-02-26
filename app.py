@@ -4,7 +4,6 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# 2026 Stable Router Path
 API_URL = "https://router.huggingface.co/v1/chat/completions"
 HF_TOKEN = os.environ.get('HF_TOKEN')
 
@@ -13,37 +12,41 @@ def query_ai(movies, platform, creativity):
         return "<p style='color:red;'>Error: HF_TOKEN missing!</p>"
     
     headers = {"Authorization": f"Bearer {HF_TOKEN.strip()}", "Content-Type": "application/json"}
-    temp = float(creativity) / 10.0
+    
+    # We cap the temperature at 0.9 to prevent the "Kanji babble" you saw
+    temp = min(float(creativity) / 10.0, 0.9)
     
     payload = {
         "model": "meta-llama/Llama-3.2-3B-Instruct:fastest",
         "messages": [
             {
                 "role": "system", 
-                "content": "You are a professional movie database. Return ONLY a valid HTML table. DO NOT use markdown. ORDER THE COLUMNS EXACTLY AS: Match %, Title, Year, Synopsis, Stars, Streaming. Use <table>, <tr>, <th>, and <td> tags. For Match %, generate a realistic percentage (e.g., 98%) based on the user's favorites."
+                "content": "You are a precise movie database API. You MUST return ONLY a valid HTML table. NO MARKDOWN. NO CONVERSATION. ORDER: Match %, Title, Year, Synopsis, Stars, Streaming. For Match %, provide a number followed by %. Ensure the Synopsis is a concise 2-sentence summary in English only."
             },
             {
                 "role": "user", 
-                "content": f"Recommend 10 movies for a fan of {movies} on {platform}. List the highest Match % at the top."
+                "content": f"Recommend 10 movies for a fan of {movies} on {platform}. Format: <table> tags only."
             }
         ],
         "temperature": temp,
-        "max_tokens": 1600
+        "presence_penalty": 0.5, # Discourages the AI from getting stuck in a babble loop
+        "max_tokens": 1200
     }
     
     try:
         response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
         if response.status_code != 200:
-            return f"<div style='color:orange;'>AI is recalibrating. Please try again!</div>"
+            return f"<div style='color:orange;'>AI is busy. Please try one more time!</div>"
             
         data = response.json()
         output = data['choices'][0]['message']['content']
         
+        # Guardrail: Ensure we only extract the table and nothing else
         if "<table>" in output:
             table_html = output.split("<table>")[1].split("</table>")[0]
             return '<table id="movieTable">' + table_html + '</table>'
         
-        return f"<div class='ai-text-fallback'>{output}</div>"
+        return "<div class='ai-text-fallback'>The AI had a glitch. Please click 'Find My Matches' again to refresh.</div>"
     except Exception as e:
         return f"<p>Error: {str(e)}</p>"
 
@@ -72,7 +75,7 @@ HTML_TEMPLATE = """
         }
         .card { 
             background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(25px); 
-            padding: 35px; border-radius: 24px; width: 520px; 
+            padding: 35px; border-radius: 24px; width: 550px; 
             border: 1px solid rgba(77, 166, 255, 0.3); 
             box-shadow: 0 20px 50px rgba(0,0,0,0.6);
             max-height: 90vh; overflow-y: auto;
@@ -102,21 +105,20 @@ HTML_TEMPLATE = """
         .results { margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
         .sort-info { font-size: 0.75rem; color: #4da6ff; margin-bottom: 10px; font-style: italic; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; table-layout: fixed; }
         th { text-align: left; color: #4da6ff; padding: 10px 5px; border-bottom: 1px solid rgba(77, 166, 255, 0.2); }
-        /* Clickable headers for Match % and Year */
-        th:nth-child(1), th:nth-child(3) { cursor: pointer; text-decoration: underline; }
+        th:nth-child(1), th:nth-child(3) { cursor: pointer; text-decoration: underline; width: 60px; }
+        th:nth-child(2) { width: 120px; }
         th:hover { color: #fff; }
-        td { padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #ddd; vertical-align: top; }
+        td { padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #ddd; vertical-align: top; overflow: hidden; }
         
-        /* Highlight high match scores */
-        td:first-child { font-weight: bold; color: #4da6ff; text-shadow: 0 0 5px rgba(77,166,255,0.4); }
+        td:first-child { font-weight: bold; color: #4da6ff; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>Movie Match Maker</h2>
-        <span class="subtitle">Your AI Film Concierge</span>
+        <h2>Movie Match Maker (BETA)</h2>
+        <span class="subtitle">Let's Find Your Next Favorite Movie...</span>
         <form method="POST" id="movieForm">
             <label>What movies do you love?</label>
             <input type="text" name="movie_input" placeholder="e.g. Inception, Heat" value="{{ user_input }}" required>
@@ -162,35 +164,22 @@ HTML_TEMPLATE = """
             if (results) { results.style.opacity = '0.2'; }
         };
 
-        // Advanced Table Sorter for Match % and Year
         document.addEventListener('click', function (e) {
             if (!e.target.matches('#movieTable th')) return;
-            
             const table = e.target.closest('table');
             const tbody = table.querySelector('tbody') || table;
             const rows = Array.from(tbody.querySelectorAll('tr')).filter(tr => tr.querySelector('td'));
             const headerIndex = Array.from(e.target.parentNode.children).indexOf(e.target);
-            
-            // Allow sorting on Match % (0) and Year (2)
             if (headerIndex !== 0 && headerIndex !== 2) return;
-
             const isAscending = e.target.classList.contains('th-sort-asc');
-            
             rows.sort((a, b) => {
-                // Remove % signs or non-numbers for clean sorting
                 const aVal = parseInt(a.children[headerIndex].textContent.replace(/\D/g,'')) || 0;
                 const bVal = parseInt(b.children[headerIndex].textContent.replace(/\D/g,'')) || 0;
                 return isAscending ? (aVal - bVal) : (bVal - aVal);
             });
-
             rows.forEach(row => tbody.appendChild(row));
             e.target.classList.toggle('th-sort-asc', !isAscending);
         });
     </script>
 </body>
 </html>
-"""
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
