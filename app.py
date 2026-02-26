@@ -178,6 +178,13 @@ body {
             LinkedIn: <a href="https://www.linkedin.com/in/kellyburns-pm" style="color:#4da6ff; text-decoration:none;">https://www.linkedin.com/in/kellyburns-pm</a><br>
             &copy; 2026 Kelly A. Burns. All Rights Reserved. Verified Project.
         </div>
+
+    <div class="footer">
+        Palm Desert, CA | <a href="mailto:KBurnsDirect@gmail.com" target="_blank" style="color:#4da6ff; text-decoration:none;">KBurnsDirect@gmail.com</a><br>
+        LinkedIn: <a href="https://www.linkedin.com/in/kellyburns-pm" target="_blank" style="color:#4da6ff; text-decoration:none;">KellyBurns-PM</a><br>
+        &copy; 2026 Kelly A. Burns. All Rights Reserved. Verified Project.
+    </div>
+
     </div>
 </body>
 </html>
