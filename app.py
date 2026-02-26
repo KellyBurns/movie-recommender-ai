@@ -10,7 +10,7 @@ HF_TOKEN = os.environ.get('HF_TOKEN')
 
 def query_ai(movies, platform, creativity):
     if not HF_TOKEN:
-        return "<p style='color:red;'>Error: HF_TOKEN is missing from Railway Variables.</p>"
+        return "<p style='color:red;'>Missing HF_TOKEN in Railway Variables!</p>"
     
     headers = {
         "Authorization": f"Bearer {HF_TOKEN}",
@@ -19,31 +19,28 @@ def query_ai(movies, platform, creativity):
     }
     
     temp = float(creativity) / 10.0
-    # Refined prompt for even stricter output
-    prompt = f"<s>[INST] User likes: {movies}. Platform: {platform}. List 10 movies. Format ONLY as an HTML table with Title, Synopsis, Stars, Streaming. No chatter. [/INST]"
+    prompt = f"<s>[INST] User likes: {movies}. Platform: {platform}. List 10 movies. Format ONLY as an HTML table with Title, Synopsis, Stars, Streaming. [/INST]"
     
     payload = {"inputs": prompt, "parameters": {"temperature": temp, "max_new_tokens": 1000}}
     
     try:
-        # We allow 110 seconds for the model to wake up
+        # Long timeout (110s) to give the AI time to 'thaw'
         response = requests.post(API_URL, headers=headers, json=payload, timeout=110)
         data = response.json()
         
-        # Scenario A: Model is still loading
+        # If model is loading, it returns an estimated time
         if isinstance(data, dict) and "estimated_time" in data:
             wait = int(data['estimated_time'])
-            return f"<div style='color:#4da6ff; font-weight:bold;'>The AI is waking up! It needs about {wait} more seconds. Please click the button again in a moment.</div>"
+            return f"<div style='color:#4da6ff; font-weight:bold;'>The AI is waking up! Ready in {wait}s. Click 'Find My Matches' again in a moment.</div>"
 
-        # Scenario B: Success!
         if isinstance(data, list) and len(data) > 0:
             output = data[0].get('generated_text', "")
             if "<table>" in output:
                 return "<table>" + output.split("<table>")[1].split("</table>")[0] + "</table>"
-            return "<p>AI results arrived but were messy. Please try clicking 'Find My Matches' again.</p>"
         
-        return "<p>The AI is ready now! Please click the button one more time to see your matches.</p>"
-    except Exception as e:
-        return f"<p>Connection timed out. The AI is still loading—please wait 10 seconds and click again!</p>"
+        return "AI is ready! Click 'Find My Matches' again to generate your list."
+    except Exception:
+        return "The AI took too long. It should be awake now—please try clicking again!"
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -69,7 +66,6 @@ HTML_TEMPLATE = """
         body { 
             margin: 0; 
             background: #0b0d17; 
-            /* Fix for BG image - ensure this file exists in /static/ */
             background-image: url('https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=2072&auto=format&fit=crop');
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -88,7 +84,6 @@ HTML_TEMPLATE = """
         input[type="text"], select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #4da6ff; background: rgba(255,255,255,0.1); color: white; box-sizing: border-box; }
         select option { background: #222; color: white; }
         .btn { background: #4da6ff; color: white; padding: 15px; width: 100%; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
-        .btn:hover { background: #007bff; }
         .results-area { margin-top: 30px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; font-size: 0.8rem; border: 1px solid #4da6ff; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid rgba(255,255,255,0.1); padding: 8px; }
@@ -106,24 +101,26 @@ HTML_TEMPLATE = """
                 <option value="Netflix" {% if selected_platform == 'Netflix' %}selected{% endif %}>Netflix</option>
                 <option value="Amazon Prime" {% if selected_platform == 'Amazon Prime' %}selected{% endif %}>Amazon Prime</option>
                 <option value="HBO Max" {% if selected_platform == 'HBO Max' %}selected{% endif %}>HBO Max</option>
-                <option value="Disney+" {% if selected_platform == 'Disney+' %}selected{% endif %}>Disney+</option>
             </select>
             <label style="display:block; margin-top:15px; font-size:0.9rem;">Creativity: {{ selected_creativity }}</label>
             <input type="range" name="creativity" min="1" max="10" value="{{ selected_creativity }}" style="width:100%;">
             <button type="submit" class="btn" id="submitBtn">Find My Matches</button>
         </form>
-        {% if table %}
-        <div class="results-area">
-            {{ table|safe }}
-        </div>
-        {% endif %}
+        {% if table %}<div class="results-area">{{ table|safe }}</div>{% endif %}
     </div>
     <script>
         document.getElementById('mainForm').onsubmit = function() {
             var btn = document.getElementById('submitBtn');
-            btn.innerHTML = "Consulting AI... (Wait 60s)";
-            // We removed 'disabled' so you can click it again if it takes too long
+            btn.innerHTML = "Thinking... (Up to 60s)";
         };
     </script>
 </body>
 </html>
+"""
+
+# --- THE CRITICAL STARTUP CODE ---
+if __name__ == "__main__":
+    # Get the port from Railway's environment, or default to 8080
+    port = int(os.environ.get("PORT", 8080))
+    # Run the app on host 0.0.0.0 so it is accessible to the public
+    app.run(host='0.0.0.0', port=port)
