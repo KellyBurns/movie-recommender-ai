@@ -68,41 +68,47 @@ LANDING_TEMPLATE = """
 <html>
 <head>
     <title>Kelly A. Burns | AI Portfolio</title>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap');
-        
-
-
 body { 
+       
             margin: 0; 
-            background-color: #05070a; /* Fallback color */
+            background: #05070a; 
             color: white; 
             font-family: 'Inter', sans-serif; 
             display: flex; 
-            justify-content: flex-end; 
-            align-items: center; 
+            justify-content: center; /* Centered is better for mobile */
+            align-items: flex-start; /* Start at top so you can scroll down */
             min-height: 100vh; 
-            padding-right: 5%;
-            
-            /* Hard-coded to the static folder */
+            padding: 20px;
             background-image: url('/static/space-ai-bg.jpg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            background-repeat: no-repeat;
         }
 
-        
         .card { 
-            background: rgba(10, 15, 25, 0.8); 
-            backdrop-filter: blur(10px);
-            padding: 40px; 
+            background: rgba(10, 15, 25, 0.9); 
+            backdrop-filter: blur(15px);
+            padding: 30px; 
             border-radius: 24px; 
-            width: 550px; 
+            width: 100%; /* Fill the screen width */
+            max-width: 500px; /* But don't get too big on desktop */
             border: 1px solid rgba(77, 166, 255, 0.2); 
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            margin-top: 20px; /* Space from the top of the phone */
         }
 
+        /* THE MOBILE TEXT FIX */
+        @media (max-width: 480px) {
+            h1 { font-size: 2.2rem; } /* Shrink header slightly so it doesn't wrap weirdly */
+            p, li { font-size: 1rem !important; } /* Force text to be a readable size */
+            .launch-btn { width: 100%; text-align: center; box-sizing: border-box; } /* Full-width button for easy thumb-tapping */
+            .card { padding: 20px; } /* Slightly less padding to save space */
+        }
+            
+  
         h1 { font-size: 3rem; font-weight: 200; margin: 0 0 10px 0; letter-spacing: -1px; }
         .tagline { color: #4da6ff; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 30px; }
 
