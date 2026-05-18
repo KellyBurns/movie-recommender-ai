@@ -3,6 +3,7 @@ import requests
 from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
+
 # Stable 2026 Router Path
 API_URL = "https://router.huggingface.co/v1/chat/completions"
 HF_TOKEN = os.environ.get('HF_TOKEN')
@@ -214,24 +215,72 @@ APP_TEMPLATE = """
     <title>Movie Match Maker [BETA]</title>
     <style>
         body { margin: 0; background: #05070a; background-image: url('/static/space-ai-bg.jpg'); background-size: cover; background-attachment: fixed; color: white; font-family: 'Inter', sans-serif; display: flex; justify-content: flex-end; align-items: center; min-height: 100vh; padding-right: 5%; }
-        .card { background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(25px); padding: 35px; border-radius: 24px; width: 550px; border: 1px solid rgba(77, 166, 255, 0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; }
-        .back-link { font-size: 0.7rem; color: #4da6ff; text-decoration: none; opacity: 0.6; display: block; margin-bottom: 10px; }
-        h2 { color: #4da6ff; margin: 0; font-weight: 300; }
-        .subtitle { font-size: 0.85rem; color: #4da6ff; opacity: 0.7; margin-bottom: 20px; display: block; }
-        label { font-size: 0.75rem; opacity: 0.8; display: block; margin-top: 15px; }
-        .hint { font-size: 0.7rem; color: #4da6ff; opacity: 0.9; margin-top: 8px; display: block; line-height: 1.4; border-left: 2px solid #4da6ff; padding-left: 10px; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; box-sizing: border-box; outline: none; }
-        .btn { background: #4da6ff; color: white; padding: 14px; width: 100%; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         
-        /* ENHANCED CHARGING/LOADING LOOK */
+        /* Responsive Card Configuration */
+        .card { background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(25px); padding: 35px; border-radius: 24px; width: 550px; border: 1px solid rgba(77, 166, 255, 0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
+        
+        .back-link { font-size: 0.85rem; color: #4da6ff; text-decoration: none; opacity: 0.6; display: block; margin-bottom: 10px; }
+        h2 { color: #4da6ff; margin: 0; font-weight: 300; font-size: 1.75rem; }
+        .subtitle { font-size: 1rem; color: #4da6ff; opacity: 0.7; margin-bottom: 20px; display: block; }
+        
+        /* Mobile-First Label & Hint Polish */
+        label { font-size: 1rem; font-weight: bold; opacity: 0.9; display: block; margin-top: 20px; }
+        .hint { font-size: 0.85rem; color: #4da6ff; opacity: 0.9; margin-top: 8px; display: block; line-height: 1.5; border-left: 2px solid #4da6ff; padding-left: 10px; }
+        
+        /* LARGE USER INPUTS (Prevents mobile auto-zoom) */
+        input[type="text"], select { 
+            width: 100%; 
+            padding: 16px; 
+            margin: 10px 0; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255,255,255,0.15); 
+            background: rgba(0,0,0,0.5); 
+            color: white; 
+            box-sizing: border-box; 
+            outline: none; 
+            font-size: 16px; 
+        }
+        
+        /* UPGRADED TOUCH-FRIENDLY SLIDER */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.2);
+            outline: none;
+            margin: 18px 0;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #4da6ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(77,166,255,0.5);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #4da6ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(77,166,255,0.5);
+        }
+
+        .btn { background: #4da6ff; color: white; padding: 16px; width: 100%; border: none; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 20px; }
+        
+        /* DYNAMIC CASUAL LOADING STATES */
         #loading { 
             display: none; 
             margin-top: 25px; 
             text-align: center; 
             color: #4da6ff; 
-            font-size: 0.85rem; 
+            font-size: 1rem; 
             background: rgba(77, 166, 255, 0.08);
-            padding: 15px;
+            padding: 18px;
             border-radius: 12px;
             border-left: 3px solid #4da6ff;
             line-height: 1.5;
@@ -248,10 +297,19 @@ APP_TEMPLATE = """
             100% { opacity: 0.4; }
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 20px; }
-        th { text-align: left; color: #4da6ff; border-bottom: 1px solid rgba(77,166,255,0.2); padding: 8px; }
-        td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
-        .range-wrap { display: flex; justify-content: space-between; font-size: 0.65rem; color: #4da6ff; opacity: 0.6; }
+        /* TABLE MOBILE SCALABILITY */
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 25px; }
+        th { text-align: left; color: #4da6ff; border-bottom: 1px solid rgba(77,166,255,0.2); padding: 10px; font-size: 0.9rem; }
+        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; line-height: 1.4; }
+        .range-wrap { display: flex; justify-content: space-between; font-size: 0.8rem; color: #4da6ff; opacity: 0.7; }
+
+        /* Full Screen Adaptation for Tiny Displays */
+        @media (max-width: 600px) {
+            body { padding: 10px; justify-content: center; }
+            .card { width: 100%; max-height: 95vh; padding: 20px; border-radius: 16px; }
+            table { font-size: 0.8rem; }
+            td, th { padding: 6px; }
+        }
     </style>
 </head>
 <body>
@@ -283,8 +341,8 @@ APP_TEMPLATE = """
         </form>
         
         <div id="loading">
-            <span class="pulse-text">⚡ AI Processing...</span>
-            <span style="opacity:0.75; font-size:0.75rem;">The AI model is processing your request. Please allow 15-30 seconds for results.</span>
+            <span class="pulse-text">Searching the movie universe...</span>
+            <span style="opacity:0.85; font-size:0.85rem;">Finding the perfect recommendations for you. This will take about 20 seconds.</span>
         </div>
 
         {% if table %}<div id="results">{{ table|safe }}</div>{% endif %}
