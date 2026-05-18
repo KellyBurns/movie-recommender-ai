@@ -1,9 +1,3 @@
-import os
-import requests
-from flask import Flask, request, render_template_string
-
-app = Flask(__name__)
-
 # Stable 2026 Router Path
 API_URL = "https://router.huggingface.co/v1/chat/completions"
 HF_TOKEN = os.environ.get('HF_TOKEN')
@@ -18,9 +12,10 @@ def query_ai(movies, platform, creativity_val):
     temp_setting = max(0.1, min(float(creativity_val) / 10.0, 1.0))
     
     # Concrete system prompt instructing the 72B engine on dynamic logic boundaries
+    # Optimized to exactly 5 high-quality recommendations to double the output speed
     system_content = (
         "You are an expert movie database API and recommendation engine. "
-        "Your task is to return exactly 10 high-quality movie recommendations formatted ONLY as a pure HTML <table>. "
+        "Your task is to return exactly 5 high-quality movie recommendations formatted ONLY as a pure HTML <table>. "
         "DO NOT use markdown pipes (|). DO NOT use code block backticks (```html). Use ONLY English.\n\n"
         "CRITICAL SYSTEM CONSTRAINTS:\n"
         "1. EXCLUSION RULE: Never recommend any movie that the user explicitly provided in their input list. "
@@ -45,7 +40,7 @@ def query_ai(movies, platform, creativity_val):
         ],
         "temperature": temp_setting,
         "presence_penalty": 0.6,
-        "max_tokens": 1500
+        "max_tokens": 1200
     }
     
     try:
@@ -188,7 +183,7 @@ body {
             </p>
 
             <h3>Tech Stack</h3>
-            <p>Built on a <b>Python/Flask</b> micro-framework. Version version control is managed via <b>GitHub</b> with an automated <b>CI/CD pipeline</b> deploying to a cloud-native <b>Railway</b> environment. All UI/UX is proprietary design.</p>
+            <p>Built on a <b>Python/Flask</b> micro-framework. Version control is managed via <b>GitHub</b> with an automated <b>CI/CD pipeline</b> deploying to a cloud-native <b>Railway</b> environment. All UI/UX is proprietary design.</p>
 
             <h3>The Engine (Qwen 2.5 72B)</h3>
             <p>Utilizes Qwen 2.5 72B via <b>Hugging Face API Router</b> for enterprise-grade reasoning. To manage stochastic randomness and prevent logical hallucinations, I implemented a <b>Temperature Parameter (0.1 - 1.0)</b>, allowing user-level control over prediction probability distributions.</p>
@@ -222,7 +217,32 @@ APP_TEMPLATE = """
         .hint { font-size: 0.7rem; color: #4da6ff; opacity: 0.9; margin-top: 8px; display: block; line-height: 1.4; border-left: 2px solid #4da6ff; padding-left: 10px; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; box-sizing: border-box; outline: none; }
         .btn { background: #4da6ff; color: white; padding: 14px; width: 100%; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        #loading { display: none; margin-top: 20px; text-align: center; color: #4da6ff; font-size: 0.9rem; }
+        
+        /* ENHANCED CHARGING/LOADING LOOK */
+        #loading { 
+            display: none; 
+            margin-top: 25px; 
+            text-align: center; 
+            color: #4da6ff; 
+            font-size: 0.85rem; 
+            background: rgba(77, 166, 255, 0.08);
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 3px solid #4da6ff;
+            line-height: 1.5;
+        }
+        .pulse-text {
+            animation: pulse 1.6s infinite ease-in-out;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; color: #99ccff; }
+            100% { opacity: 0.4; }
+        }
+
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 20px; }
         th { text-align: left; color: #4da6ff; border-bottom: 1px solid rgba(77,166,255,0.2); padding: 8px; }
         td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
@@ -256,7 +276,12 @@ APP_TEMPLATE = """
             </select>
             <button type="submit" class="btn">Find My Matches</button>
         </form>
-        <div id="loading">Consulting the Multiverse...</div>
+        
+        <div id="loading">
+            <span class="pulse-text">⚡ AI Processing...</span>
+            <span style="opacity:0.75; font-size:0.75rem;">The AI model is processing your request. Please allow 15-30 seconds for results.</span>
+        </div>
+
         {% if table %}<div id="results">{{ table|safe }}</div>{% endif %}
     </div>
     <script>
