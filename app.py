@@ -17,16 +17,30 @@ def query_ai(movies, platform, creativity_val):
     # Map the 1-10 slider to a 0.1 - 1.0 temperature range for the LLM
     temp_setting = max(0.1, min(float(creativity_val) / 10.0, 1.0))
     
+    # Concrete system prompt instructing the 72B engine on dynamic logic boundaries
+    system_content = (
+        "You are an expert movie database API and recommendation engine. "
+        "Your task is to return exactly 10 high-quality movie recommendations formatted ONLY as a pure HTML <table>. "
+        "DO NOT use markdown pipes (|). DO NOT use code block backticks (```html). Use ONLY English.\n\n"
+        "CRITICAL SYSTEM CONSTRAINTS:\n"
+        "1. EXCLUSION RULE: Never recommend any movie that the user explicitly provided in their input list. "
+        "If they like a movie, exclude it from the results and find new, distinct alternatives.\n"
+        "2. LOGICAL MATCH CODES: Calculate the Match % dynamically based on cinematic similarity to the user's input, "
+        "but keep it relative to the input baseline. Do not list input movies as an 80% match.\n"
+        "3. DATA RELEVANCE: Ensure your suggestions span modern cinema releases up through recent years, matching "
+        "the requested streaming availability context."
+    )
+    
     payload = {
-        "model": "meta-llama/Llama-3.2-3B-Instruct:fastest",
+        "model": "Qwen/Qwen2.5-72B-Instruct",
         "messages": [
             {
                 "role": "system", 
-                "content": "You are a precise movie database API. Return ONLY a pure HTML <table>. DO NOT use markdown pipes (|). DO NOT use backticks. Use ONLY English. Provide 10 recommendations."
+                "content": system_content
             },
             {
                 "role": "user", 
-                "content": f"Create an HTML table for a fan of {movies} on {platform}. Columns: Match %, Title, Year, Synopsis, Stars, Streaming."
+                "content": f"Create an HTML table for a fan who loves {movies} and wants to watch on streaming platform: {platform}. Columns: Match %, Title, Year, Synopsis, Stars, Streaming."
             }
         ],
         "temperature": temp_setting,
@@ -70,7 +84,7 @@ LANDING_TEMPLATE = """
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelly A. Burns | AI Portfolio</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap');
+        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap)');
 body { 
        
             margin: 0; 
@@ -174,23 +188,22 @@ body {
             </p>
 
             <h3>Tech Stack</h3>
-            <p>Built on a <b>Python/Flask</b> micro-framework. Version control is managed via <b>GitHub</b> with an automated <b>CI/CD pipeline</b> deploying to a cloud-native <b>Railway</b> environment. All UI/UX is proprietary design.</p>
+            <p>Built on a <b>Python/Flask</b> micro-framework. Version version control is managed via <b>GitHub</b> with an automated <b>CI/CD pipeline</b> deploying to a cloud-native <b>Railway</b> environment. All UI/UX is proprietary design.</p>
 
-            <h3>The Engine (Llama 3.2)</h3>
-            <p>Utilizes Llama 3.2 via <b>Hugging Face API</b> for advanced zero-shot reasoning. To manage stochastic randomness and prevent hallucinations, I implemented a <b>Temperature Parameter (0.1 - 1.0)</b>, allowing user-level control over prediction probability distributions.</p>
+            <h3>The Engine (Qwen 2.5 72B)</h3>
+            <p>Utilizes Qwen 2.5 72B via <b>Hugging Face API Router</b> for enterprise-grade reasoning. To manage stochastic randomness and prevent logical hallucinations, I implemented a <b>Temperature Parameter (0.1 - 1.0)</b>, allowing user-level control over prediction probability distributions.</p>
         </div>
 
 
     <div class="footer">
         Palm Desert, CA | <a href="mailto:KBurnsDirect@gmail.com" target="_blank" style="color:#4da6ff; text-decoration:none;">KBurnsDirect@gmail.com</a><br>
-        LinkedIn: <a href="https://www.linkedin.com/in/kellyburns-pm" target="_blank" style="color:#4da6ff; text-decoration:none;">KellyBurns-PM</a><br>
+        LinkedIn: <a href="[https://www.linkedin.com/in/kellyburns-pm](https://www.linkedin.com/in/kellyburns-pm)" target="_blank" style="color:#4da6ff; text-decoration:none;">KellyBurns-PM</a><br>
         &copy; 2026 Kelly A. Burns. All Rights Reserved. Verified Project.
     </div>
 
     </div>
 </body>
 </html>
-
 """
 
 APP_TEMPLATE = """
