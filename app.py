@@ -342,7 +342,7 @@ APP_TEMPLATE = """
         
         <div id="loading">
             <span class="pulse-text">Searching the movie universe...</span>
-            <span style="opacity:0.85; font-size:0.85rem;">Finding the perfect recommendations for you. This will take about 20 seconds.</span>
+            <span style="opacity:0.85; font-size:0.85rem;">Finding the perfect recommendations for you. This will take about 30 seconds.</span>
         </div>
 
         {% if table %}<div id="results">{{ table|safe }}</div>{% endif %}
