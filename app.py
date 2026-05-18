@@ -78,12 +78,27 @@ def movie_app():
 
 # --- UI TEMPLATES ---
 
+
 LANDING_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelly A. Burns | AI Portfolio</title>
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.kellyaburns.com/">
+    <meta property="og:title" content="Kelly A. Burns | AI Portfolio">
+    <meta property="og:description" content="Explorations in AI development, enterprise architecture, and machine learning implementations featuring the Movie Match Maker engine.">
+    <meta property="og:image" content="https://www.kellyaburns.com/static/space-ai-bg.jpg">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.kellyaburns.com/">
+    <meta property="twitter:title" content="Kelly A. Burns | AI Portfolio">
+    <meta property="twitter:description" content="Explorations in AI development, enterprise architecture, and machine learning implementations.">
+    <meta property="twitter:image" content="https://www.kellyaburns.com/static/space-ai-bg.jpg">
+
+    
     <style>
         @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap)');
 body { 
