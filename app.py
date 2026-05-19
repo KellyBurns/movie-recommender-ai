@@ -17,13 +17,16 @@ def query_ai(movies, platform, creativity_val):
     # Map the 1-10 slider to a 0.1 - 1.0 temperature range for the LLM
     temp_setting = max(0.1, min(float(creativity_val) / 10.0, 1.0))
     
-    # System prompt enforcing strict validation and output formatting
+    # UPDATED SYSTEM PROMPT: Adjusted validation logic to allow mixed lists of real movies/actors
     system_content = (
         "You are an expert movie database API and recommendation engine. "
-        "Your first job is to validate if the user's input contains a real movie, show, or actor. "
-        "If the input is completely made up, nonsensical, or entirely non-existent in reality, "
-        "you MUST return exactly the word: NOT_FOUND. Do not return anything else.\n\n"
-        "If the input is real, return exactly 5 high-quality movie recommendations formatted ONLY as a pure HTML <table>. "
+        "Your first job is to validate the user's input. If the input consists of completely made-up gibberish, "
+        "random keyboard typing, or entirely fictional titles/people that do not exist in reality, you MUST "
+        "return exactly the word: NOT_FOUND. Do not return anything else.\n\n"
+        "CRITICAL VALIDATION RULE: If the user provides a list combining real actors and real movies together "
+        "(for example: 'Charlize Theron, Blade Runner'), this is completely VALID. Do not flag mixed lists of real "
+        "entities as NOT_FOUND. Instead, accept them and use both elements to guide your suggestions.\n\n"
+        "If the input is valid, return exactly 5 high-quality movie recommendations formatted ONLY as a pure HTML <table>. "
         "DO NOT use markdown pipes (|). DO NOT use code block backticks (```html). Use ONLY English.\n\n"
         "CRITICAL SYSTEM CONSTRAINTS:\n"
         "1. EXCLUSION RULE: Never recommend any movie that the user explicitly provided in their input list. "
@@ -310,7 +313,7 @@ APP_TEMPLATE = """
         
         <div id="loading">
             <span class="pulse-text">Searching the movie universe...</span>
-            <span style="opacity:0.85; font-size:0.85rem;">Finding the perfect recommendations for you. This will take about 20 seconds.</span>
+            <span style="opacity:0.85; font-size:0.85rem;">Finding the perfect recommendations for you. This will take about 30 seconds.</span>
         </div>
 
         {% if table %}<div id="results">{{ table|safe }}</div>{% endif %}
