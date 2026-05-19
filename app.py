@@ -17,7 +17,7 @@ def query_ai(movies, platform, creativity_val):
     # Map the 1-10 slider to a 0.1 - 1.0 temperature range for the LLM
     temp_setting = max(0.1, min(float(creativity_val) / 10.0, 1.0))
     
-    # UPDATED SYSTEM PROMPT: Adjusted validation logic to allow mixed lists of real movies/actors
+    # System prompt enforcing validation and mixed entities
     system_content = (
         "You are an expert movie database API and recommendation engine. "
         "Your first job is to validate the user's input. If the input consists of completely made-up gibberish, "
@@ -86,7 +86,12 @@ def movie_app():
     creativity = "1"
     if request.method == 'POST':
         user_input = request.form.get('movie_input', "")
-        platform = request.form.get('platform', "Netflix")
+        platform = request.form.get('platform', "").strip()
+        
+        # BACKEND FALLBACK: If user skips selection, seamlessly default to 'Any of the above'
+        if not platform:
+            platform = "Any of the above"
+            
         creativity = request.form.get('creativity', "1")
         table = query_ai(user_input, platform, creativity)
     return render_template_string(APP_TEMPLATE, table=table, user_input=user_input, creativity=creativity)
@@ -212,6 +217,8 @@ APP_TEMPLATE = """
             font-size: 16px; 
         }
         
+        select option { background: #0a0f19; color: white; }
+
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
@@ -300,6 +307,7 @@ APP_TEMPLATE = """
 
             <label style="margin-top: 25px;">What's Your Preferred Streaming Service?</label>
             <select name="platform">
+                <option value="" selected>Choose a service... (Optional)</option>
                 <option value="Netflix">Netflix</option>
                 <option value="Amazon Prime">Amazon Prime</option>
                 <option value="Hulu">Hulu</option>
