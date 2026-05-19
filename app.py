@@ -14,27 +14,47 @@ def query_ai(movies, platform, creativity_val):
     
     headers = {"Authorization": f"Bearer {HF_TOKEN.strip()}", "Content-Type": "application/json"}
     
-    # Map the 1-10 slider to a 0.1 - 1.0 temperature range for the LLM
-    temp_setting = max(0.1, min(float(creativity_val) / 10.0, 1.0))
+    # Map the 1-10 slider to a 0.1 - 1.0 temperature range
+    slider_num = int(creativity_val)
+    temp_setting = max(0.1, min(float(slider_num) / 10.0, 1.0))
     
-    # System prompt enforcing validation and mixed entities
+    # DYNAMIC LOGIC: Shift the prompt's instructions based on the slider value to force variety
+    if slider_num <= 3:
+        creativity_instruction = (
+            "Focus on the most direct, highly probable, and mathematically closest cinematic matches. "
+            "Prioritize movies that share the exact genre, direct tone, and obvious structural styles of the input."
+        )
+    elif 4 <= slider_num <= 7:
+        creativity_instruction = (
+            "Introduce moderate variety. Look for films with overlapping directors, cinematographers, or "
+            "sub-genres. Blend obvious choices with slightly unexpected but highly artistic alternatives."
+        )
+    else:
+        creativity_instruction = (
+            "CRITICAL: Unleash maximum variety and out-of-the-box creativity. AVOID the most obvious blockbusters. "
+            "Instead, recommend hidden gems, cult classics, indie masterpieces, or films with unexpected thematic links, "
+            "unconventional narrative styles, or abstract philosophical connections to the input. Be boldly creative."
+        )
+
+    # Base system prompt embedded with our dynamic creativity instruction
     system_content = (
-        "You are an expert movie database API and recommendation engine. "
-        "Your first job is to validate the user's input. If the input consists of completely made-up gibberish, "
-        "random keyboard typing, or entirely fictional titles/people that do not exist in reality, you MUST "
-        "return exactly the word: NOT_FOUND. Do not return anything else.\n\n"
-        "CRITICAL VALIDATION RULE: If the user provides a list combining real actors and real movies together "
-        "(for example: 'Charlize Theron, Blade Runner'), this is completely VALID. Do not flag mixed lists of real "
-        "entities as NOT_FOUND. Instead, accept them and use both elements to guide your suggestions.\n\n"
-        "If the input is valid, return exactly 5 high-quality movie recommendations formatted ONLY as a pure HTML <table>. "
-        "DO NOT use markdown pipes (|). DO NOT use code block backticks (```html). Use ONLY English.\n\n"
-        "CRITICAL SYSTEM CONSTRAINTS:\n"
-        "1. EXCLUSION RULE: Never recommend any movie that the user explicitly provided in their input list. "
-        "If they like a movie, exclude it from the results and find new, distinct alternatives.\n"
-        "2. LOGICAL MATCH CODES: Calculate the Match % dynamically based on cinematic similarity to the user's input, "
-        "but keep it relative to the input baseline. Do not list input movies as an 80% match.\n"
-        "3. DATA RELEVANCE: Ensure your suggestions span modern cinema releases up through recent years, matching "
-        "the requested streaming availability context."
+        f"You are an expert movie database API and recommendation engine. "
+        f"Your first job is to validate the user's input. If the input consists of completely made-up gibberish, "
+        f"random keyboard typing, or entirely fictional titles/people that do not exist in reality, you MUST "
+        f"return exactly the word: NOT_FOUND. Do not return anything else.\n\n"
+        f"CRITICAL VALIDATION RULE: If the user provides a list combining real actors and real movies together "
+        f"(for example: 'Charlize Theron, Blade Runner'), this is completely VALID. Do not flag mixed lists of real "
+        f"entities as NOT_FOUND. Instead, accept them and use both elements to guide your suggestions.\n\n"
+        f"CREATIVITY DIRECTION: {creativity_instruction}\n\n"
+        f"If the input is valid, return exactly 5 high-quality movie recommendations formatted ONLY as a pure HTML <table>. "
+        f"DO NOT use markdown pipes (|). DO NOT use code block backticks (```html). Use ONLY English.\n\n"
+        f"CRITICAL SYSTEM CONSTRAINTS:\n"
+        f"1. EXCLUSION RULE: Never recommend any movie that the user explicitly provided in their input list. "
+        f"If they like a movie, exclude it from the results and find new, distinct alternatives.\n"
+        f"2. LOGICAL MATCH CODES: Calculate the Match % dynamically based on cinematic similarity to the user's input, "
+        f"but keep it relative to the input baseline. Do not list input movies as an 80% match.\n"
+        f"3. DATA RELEVANCE: Ensure your suggestions span modern cinema releases up through recent years, matching "
+        f"the requested streaming availability context."
     )
     
     payload = {
@@ -50,7 +70,7 @@ def query_ai(movies, platform, creativity_val):
             }
         ],
         "temperature": temp_setting,
-        "presence_penalty": 0.6,
+        "presence_penalty": 0.8,  # Bumped up slightly to punish repetitive recommendations
         "max_tokens": 1200
     }
     
@@ -83,15 +103,14 @@ def landing():
 def movie_app():
     table = ""
     user_input = ""
-    creativity = "1"
+    creativity = "1"  # Default string literal matching slider baseline
     if request.method == 'POST':
         user_input = request.form.get('movie_input', "")
         platform = request.form.get('platform', "").strip()
-        
-        # BACKEND FALLBACK: If user skips selection, seamlessly default to 'Any of the above'
         if not platform:
             platform = "Any of the above"
             
+        # Capture selection as a string to pass cleanly back into HTML value attribute
         creativity = request.form.get('creativity', "1")
         table = query_ai(user_input, platform, creativity)
     return render_template_string(APP_TEMPLATE, table=table, user_input=user_input, creativity=creativity)
