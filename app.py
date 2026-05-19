@@ -17,7 +17,7 @@ def query_ai(movies, platform, creativity_val):
     # Map the 1-10 slider to a 0.1 - 1.0 temperature range for the LLM
     temp_setting = max(0.1, min(float(creativity_val) / 10.0, 1.0))
     
-    # Updated System Prompt with strict existence validation rules
+    # System prompt enforcing strict validation and output formatting
     system_content = (
         "You are an expert movie database API and recommendation engine. "
         "Your first job is to validate if the user's input contains a real movie, show, or actor. "
@@ -56,7 +56,6 @@ def query_ai(movies, platform, creativity_val):
         data = response.json()
         output = data['choices'][0]['message']['content'].strip()
         
-        # Intercept the non-existent validation failure flag
         if "NOT_FOUND" in output:
             return (
                 "<div class='error-msg'>"
@@ -81,12 +80,13 @@ def landing():
 def movie_app():
     table = ""
     user_input = ""
+    creativity = "1"
     if request.method == 'POST':
         user_input = request.form.get('movie_input', "")
-        platform = request.form.get('platform', "Anywhere")
-        creativity = request.form.get('creativity', "5")
+        platform = request.form.get('platform', "Netflix")
+        creativity = request.form.get('creativity', "1")
         table = query_ai(user_input, platform, creativity)
-    return render_template_string(APP_TEMPLATE, table=table, user_input=user_input)
+    return render_template_string(APP_TEMPLATE, table=table, user_input=user_input, creativity=creativity)
 
 # --- UI TEMPLATES ---
 
@@ -97,9 +97,8 @@ LANDING_TEMPLATE = """
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelly A. Burns | AI Portfolio</title>
     <style>
-        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap)');
+        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght=200;400;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght=200;400;700&display=swap)');
 body { 
-       
             margin: 0; 
             background: #05070a; 
             color: white; 
@@ -135,10 +134,7 @@ body {
             .card { padding: 20px; }
         }
             
-  
         h1 { font-size: 3rem; font-weight: 200; margin: 0 0 10px 0; letter-spacing: -1px; }
-        .tagline { color: #4da6ff; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 30px; }
-
         .launch-btn { 
             background: linear-gradient(135deg, #4da6ff, #0066cc); 
             color: white; 
@@ -151,60 +147,33 @@ body {
             transition: transform 0.2s;
         }
         .launch-btn:hover { transform: scale(1.05); }
-
-        .tech-section { 
-            border-top: 1px solid rgba(255, 255, 255, 0.1); 
-            padding-top: 25px;
-        }
-
+        .tech-section { border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 25px; }
         h2 { font-size: 1.2rem; color: #4da6ff; margin-bottom: 15px; font-weight: 700; }
         h3 { font-size: 0.9rem; margin: 20px 0 8px 0; color: rgba(255,255,255,0.9); }
-        
-        p { 
-            font-size: 0.85rem; 
-            line-height: 1.6; 
-            color: rgba(255, 255, 255, 0.7); 
-            margin-bottom: 15px; 
-        }
-
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.75rem;
-            opacity: 0.6;
-        }
+        p { font-size: 0.85rem; line-height: 1.6; color: rgba(255, 255, 255, 0.7); margin-bottom: 15px; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.75rem; opacity: 0.6; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Kelly A. Burns</h1>
         <p class="description">Explorations in AI Development</p>
-        
         <a href="/app" class="launch-btn">Launch Project</a>
-
         <div class="tech-section">
             <h2>Technical Architecture</h2>
-            
             <h3>Human-In-The-Loop Collaboration</h3>
             <p>I architected this solo project through an AI-augmented development process to accelerate prototyping. By employing Gemini 3 Flash for high-order logic, I bridged the gap between back-end infrastructure and front-end user experience.</p>
-            <p> I maintained a strict manual audit layer, correcting recursive context-loss issues—such as repeated dropping of environment port configurations and prompt logic—to ensure system stability.
-            </p>
-
+            <p>I maintained a strict manual audit layer, correcting recursive context-loss issues—such as repeated dropping of environment port configurations and prompt logic—to ensure system stability.</p>
             <h3>Tech Stack</h3>
             <p>Built on a <b>Python/Flask</b> micro-framework. Version control is managed via <b>GitHub</b> with an automated <b>CI/CD pipeline</b> deploying to a cloud-native <b>Railway</b> environment. All UI/UX is proprietary design.</p>
-
             <h3>The Engine (Qwen 2.5 72B)</h3>
             <p>Utilizes Qwen 2.5 72B via <b>Hugging Face API Router</b> for enterprise-grade reasoning. To manage stochastic randomness and prevent logical hallucinations, I implemented a <b>Temperature Parameter (0.1 - 1.0)</b>, allowing user-level control over prediction probability distributions.</p>
         </div>
-
-
-    <div class="footer">
-        Palm Desert, CA | <a href="mailto:KBurnsDirect@gmail.com" target="_blank" style="color:#4da6ff; text-decoration:none;">KBurnsDirect@gmail.com</a><br>
-        LinkedIn: <a href="[https://www.linkedin.com/in/kellyburns-pm](https://www.linkedin.com/in/kellyburns-pm)" target="_blank" style="color:#4da6ff; text-decoration:none;">KellyBurns-PM</a><br>
-        &copy; 2026 Kelly A. Burns. All Rights Reserved. Verified Project.
-    </div>
-
+        <div class="footer">
+            Palm Desert, CA | <a href="mailto:KBurnsDirect@gmail.com" target="_blank" style="color:#4da6ff; text-decoration:none;">KBurnsDirect@gmail.com</a><br>
+            LinkedIn: <a href="[https://www.linkedin.com/in/kellyburns-pm](https://www.linkedin.com/in/kellyburns-pm)" target="_blank" style="color:#4da6ff; text-decoration:none;">KellyBurns-PM</a><br>
+            &copy; 2026 Kelly A. Burns. All Rights Reserved. Verified Project.
+        </div>
     </div>
 </body>
 </html>
@@ -215,19 +184,18 @@ APP_TEMPLATE = """
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Match Maker [BETA]</title>
+    <title>Movie Matchmaker</title>
     <style>
         body { margin: 0; background: #05070a; background-image: url('/static/space-ai-bg.jpg'); background-size: cover; background-attachment: fixed; color: white; font-family: 'Inter', sans-serif; display: flex; justify-content: flex-end; align-items: center; min-height: 100vh; padding-right: 5%; }
-        
         .card { background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(25px); padding: 35px; border-radius: 24px; width: 550px; border: 1px solid rgba(77, 166, 255, 0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
-        
         .back-link { font-size: 0.85rem; color: #4da6ff; text-decoration: none; opacity: 0.6; display: block; margin-bottom: 10px; }
         h2 { color: #4da6ff; margin: 0; font-weight: 300; font-size: 1.75rem; }
         .subtitle { font-size: 1rem; color: #4da6ff; opacity: 0.7; margin-bottom: 20px; display: block; }
-        
         label { font-size: 1rem; font-weight: bold; opacity: 0.9; display: block; margin-top: 20px; }
-        .hint { font-size: 0.85rem; color: #4da6ff; opacity: 0.9; margin-top: 8px; display: block; line-height: 1.5; border-left: 2px solid #4da6ff; padding-left: 10px; }
         
+        .slider-explanation { font-size: 0.85rem; color: rgba(255, 255, 255, 0.8); line-height: 1.5; margin-top: 8px; margin-bottom: 4px; }
+        .input-explanation { font-size: 0.85rem; color: rgba(255, 255, 255, 0.8); line-height: 1.5; margin-top: 6px; margin-bottom: 12px; }
+
         input[type="text"], select { 
             width: 100%; 
             padding: 16px; 
@@ -248,7 +216,7 @@ APP_TEMPLATE = """
             border-radius: 5px;
             background: rgba(255,255,255,0.2);
             outline: none;
-            margin: 18px 0;
+            margin: 12px 0 6px 0;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -283,36 +251,18 @@ APP_TEMPLATE = """
             border-left: 3px solid #4da6ff;
             line-height: 1.5;
         }
-        .pulse-text {
-            animation: pulse 1.6s infinite ease-in-out;
-            font-weight: bold;
-            display: block;
-            margin-bottom: 4px;
-        }
-        @keyframes pulse {
-            0% { opacity: 0.4; }
-            50% { opacity: 1; color: #99ccff; }
-            100% { opacity: 0.4; }
-        }
+        .pulse-text { animation: pulse 1.6s infinite ease-in-out; font-weight: bold; display: block; margin-bottom: 4px; }
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; color: #99ccff; } 100% { opacity: 0.4; } }
 
-        /* STYLING FOR THE HAL EASTER EGG ERROR VIEW */
-        .error-msg {
-            margin-top: 25px;
-            background: rgba(255, 77, 77, 0.08);
-            color: #ff4d4d;
-            border-left: 3px solid #ff4d4d;
-            padding: 18px;
-            border-radius: 12px;
-            font-size: 1.05rem;
-            line-height: 1.5;
-            font-style: italic;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
+        .error-msg { margin-top: 25px; background: rgba(255, 77, 77, 0.08); color: #ff4d4d; border-left: 3px solid #ff4d4d; padding: 18px; border-radius: 12px; font-size: 1.05rem; line-height: 1.5; font-style: italic; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 25px; }
         th { text-align: left; color: #4da6ff; border-bottom: 1px solid rgba(77,166,255,0.2); padding: 10px; font-size: 0.9rem; }
         td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; line-height: 1.4; }
-        .range-wrap { display: flex; justify-content: space-between; font-size: 0.8rem; color: #4da6ff; opacity: 0.7; }
+        
+        .range-wrap { display: flex; justify-content: space-between; font-size: 0.75rem; color: #4da6ff; opacity: 0.85; font-weight: bold; padding: 0 2px; }
+        .range-wrap span { width: 33.33%; }
+        .range-wrap .center-label { text-align: center; }
+        .range-wrap .right-label { text-align: right; }
 
         @media (max-width: 600px) {
             body { padding: 10px; justify-content: center; }
@@ -325,34 +275,42 @@ APP_TEMPLATE = """
 <body>
     <div class="card">
         <a href="/" class="back-link">← Portfolio Home</a>
-        <h2>Movie Match Maker [BETA]</h2>
+        <h2>Movie Matchmaker</h2>
         <span class="subtitle">Let's find your next favorite film...</span>
         <form method="POST" action="/app">
             <label>What movies or actors do you love?</label>
+            <p class="input-explanation">
+                The more movies and/or actors you provide here, the more accurately the AI can map your taste profiles to generate stellar recommendations. Fire away! I'm ready. 😊
+            </p>
             <input type="text" name="movie_input" placeholder="e.g. Inception, Heat, Sandra Bullock" value="{{ user_input }}" required>
-            <span class="hint"><b>Pro Tip:</b> The more films/actors you provide, the better the AI can triangulate your specific taste in pacing, cinematography, and themes.</span>
             
-            <label style="margin-top: 20px;">Model Temperature (Creativity)</label>
-            <input type="range" name="creativity" min="1" max="10" value="5">
+            <label style="margin-top: 20px;">Choose Your Vibe</label>
+            <p class="slider-explanation">
+                When the slider is at the far left (default mode), you'll see movies that are the <b>most like</b> what you entered. In the middle, you'll get more <b>creative choices</b> with similar actors, directors, or cinematic styles. All the way to the right delivers the <b>most creative choices</b>—out-of-the-box predictions tailored completely to your unique tastes.
+            </p>
+            <input type="range" name="creativity" min="1" max="10" value="{{ creativity }}">
             <div class="range-wrap">
-                <span>0.1 (Precise)</span>
-                <span>1.0 (Creative)</span>
+                <span>Most Likely Choices</span>
+                <span class="center-label">Slightly More Creative</span>
+                <span class="right-label">Most Creative Choices</span>
             </div>
-            <span class="hint" style="border-color: #ff9900; opacity: 0.7;"><b>Parameter Note:</b> Adjusting this slider modifies the model's <b>sampling temperature</b> to control the variance of the recommendation engine.</span>
 
-            <label style="margin-top: 15px;">Streaming Service</label>
+            <label style="margin-top: 25px;">What's Your Preferred Streaming Service?</label>
             <select name="platform">
-                <option value="Anywhere">Anywhere</option>
                 <option value="Netflix">Netflix</option>
                 <option value="Amazon Prime">Amazon Prime</option>
+                <option value="Hulu">Hulu</option>
                 <option value="HBO Max">HBO Max</option>
+                <option value="Peacock">Peacock</option>
+                <option value="Apple TV+">Apple TV+</option>
+                <option value="Any of the above">Any of the above</option>
             </select>
             <button type="submit" class="btn">Find My Matches</button>
         </form>
         
         <div id="loading">
             <span class="pulse-text">Searching the movie universe...</span>
-            <span style="opacity:0.85; font-size:0.85rem;">Finding the perfect recommendations for you. This will take about 30 seconds.</span>
+            <span style="opacity:0.85; font-size:0.85rem;">Finding the perfect recommendations for you. This will take about 20 seconds.</span>
         </div>
 
         {% if table %}<div id="results">{{ table|safe }}</div>{% endif %}
