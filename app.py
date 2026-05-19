@@ -4,7 +4,7 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# Stable 2026 Router  Path
+# Stable 2026 Router Path
 API_URL = "https://router.huggingface.co/v1/chat/completions"
 HF_TOKEN = os.environ.get('HF_TOKEN')
 
@@ -17,11 +17,13 @@ def query_ai(movies, platform, creativity_val):
     # Map the 1-10 slider to a 0.1 - 1.0 temperature range for the LLM
     temp_setting = max(0.1, min(float(creativity_val) / 10.0, 1.0))
     
-    # Concrete system prompt instructing the 72B engine on dynamic logic boundaries
-    # Optimized to exactly 5 high-quality recommendations to double the output speed
+    # Updated System Prompt with strict existence validation rules
     system_content = (
         "You are an expert movie database API and recommendation engine. "
-        "Your task is to return exactly 5 high-quality movie recommendations formatted ONLY as a pure HTML <table>. "
+        "Your first job is to validate if the user's input contains a real movie, show, or actor. "
+        "If the input is completely made up, nonsensical, or entirely non-existent in reality, "
+        "you MUST return exactly the word: NOT_FOUND. Do not return anything else.\n\n"
+        "If the input is real, return exactly 5 high-quality movie recommendations formatted ONLY as a pure HTML <table>. "
         "DO NOT use markdown pipes (|). DO NOT use code block backticks (```html). Use ONLY English.\n\n"
         "CRITICAL SYSTEM CONSTRAINTS:\n"
         "1. EXCLUSION RULE: Never recommend any movie that the user explicitly provided in their input list. "
@@ -41,7 +43,7 @@ def query_ai(movies, platform, creativity_val):
             },
             {
                 "role": "user", 
-                "content": f"Create an HTML table for a fan who loves {movies} and wants to watch on streaming platform: {platform}. Columns: Match %, Title, Year, Synopsis, Stars, Streaming."
+                "content": f"Validate and process this movie input: {movies}. If valid, provide recommendations for streaming platform: {platform}. Columns: Match %, Title, Year, Synopsis, Stars, Streaming."
             }
         ],
         "temperature": temp_setting,
@@ -52,7 +54,17 @@ def query_ai(movies, platform, creativity_val):
     try:
         response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
         data = response.json()
-        output = data['choices'][0]['message']['content']
+        output = data['choices'][0]['message']['content'].strip()
+        
+        # Intercept the non-existent validation failure flag
+        if "NOT_FOUND" in output:
+            return (
+                "<div class='error-msg'>"
+                "&ldquo;I'm sorry, Hal, I can't do that. You've listed a film or actor "
+                "that is actually non-existent. Please try again.&rdquo;"
+                "</div>"
+            )
+            
         clean_html = output.replace("```html", "").replace("```", "").strip()
         
         if "<table" in clean_html:
@@ -78,27 +90,12 @@ def movie_app():
 
 # --- UI TEMPLATES ---
 
-
 LANDING_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelly A. Burns | AI Portfolio</title>
-    
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.kellyaburns.com/">
-    <meta property="og:title" content="Kelly A. Burns | AI Portfolio">
-    <meta property="og:description" content="Explorations in AI development, enterprise architecture, and machine learning implementations featuring the Movie Match Maker engine.">
-    <meta property="og:image" content="https://www.kellyaburns.com/static/space-ai-bg.jpg">
-
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://www.kellyaburns.com/">
-    <meta property="twitter:title" content="Kelly A. Burns | AI Portfolio">
-    <meta property="twitter:description" content="Explorations in AI development, enterprise architecture, and machine learning implementations.">
-    <meta property="twitter:image" content="https://www.kellyaburns.com/static/space-ai-bg.jpg">
-
-    
     <style>
         @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap)');
 body { 
@@ -108,8 +105,8 @@ body {
             color: white; 
             font-family: 'Inter', sans-serif; 
             display: flex; 
-            justify-content: center; /* Centered is better for mobile */
-            align-items: flex-start; /* Start at top so you can scroll down */
+            justify-content: center;
+            align-items: flex-start;
             min-height: 100vh; 
             padding: 20px;
             background-image: url('/static/space-ai-bg.jpg');
@@ -123,20 +120,19 @@ body {
             backdrop-filter: blur(20px);
             padding: 30px; 
             border-radius: 28px; 
-            width: 92vw; /* 92% of the screen width */
+            width: 92vw;
             max-width: 550px; 
             border: 1px solid rgba(77, 166, 255, 0.3); 
             box-shadow: 0 25px 60px rgba(0,0,0,0.6);
-            margin: 20px auto; /* This centers it perfectly */
-            box-sizing: border-box; /* This keeps it from spilling over */
+            margin: 20px auto;
+            box-sizing: border-box;
         }
 
-        /* THE MOBILE TEXT FIX */
         @media (max-width: 480px) {
-            h1 { font-size: 2.2rem; } /* Shrink header slightly so it doesn't wrap weirdly */
-            p, li { font-size: 1rem !important; } /* Force text to be a readable size */
-            .launch-btn { width: 100%; text-align: center; box-sizing: border-box; } /* Full-width button for easy thumb-tapping */
-            .card { padding: 20px; } /* Slightly less padding to save space */
+            h1 { font-size: 2.2rem; }
+            p, li { font-size: 1rem !important; }
+            .launch-btn { width: 100%; text-align: center; box-sizing: border-box; }
+            .card { padding: 20px; }
         }
             
   
@@ -169,14 +165,6 @@ body {
             line-height: 1.6; 
             color: rgba(255, 255, 255, 0.7); 
             margin-bottom: 15px; 
-        }
-
-        .audit-highlight {
-            background: rgba(77, 166, 255, 0.1);
-            border-left: 3px solid #4da6ff;
-            padding: 10px 15px;
-            font-style: italic;
-            margin: 15px 0;
         }
 
         .footer {
@@ -231,18 +219,15 @@ APP_TEMPLATE = """
     <style>
         body { margin: 0; background: #05070a; background-image: url('/static/space-ai-bg.jpg'); background-size: cover; background-attachment: fixed; color: white; font-family: 'Inter', sans-serif; display: flex; justify-content: flex-end; align-items: center; min-height: 100vh; padding-right: 5%; }
         
-        /* Responsive Card Configuration */
         .card { background: rgba(10, 15, 25, 0.85); backdrop-filter: blur(25px); padding: 35px; border-radius: 24px; width: 550px; border: 1px solid rgba(77, 166, 255, 0.3); box-shadow: 0 20px 50px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
         
         .back-link { font-size: 0.85rem; color: #4da6ff; text-decoration: none; opacity: 0.6; display: block; margin-bottom: 10px; }
         h2 { color: #4da6ff; margin: 0; font-weight: 300; font-size: 1.75rem; }
         .subtitle { font-size: 1rem; color: #4da6ff; opacity: 0.7; margin-bottom: 20px; display: block; }
         
-        /* Mobile-First Label & Hint Polish */
         label { font-size: 1rem; font-weight: bold; opacity: 0.9; display: block; margin-top: 20px; }
         .hint { font-size: 0.85rem; color: #4da6ff; opacity: 0.9; margin-top: 8px; display: block; line-height: 1.5; border-left: 2px solid #4da6ff; padding-left: 10px; }
         
-        /* LARGE USER INPUTS (Prevents mobile auto-zoom) */
         input[type="text"], select { 
             width: 100%; 
             padding: 16px; 
@@ -256,7 +241,6 @@ APP_TEMPLATE = """
             font-size: 16px; 
         }
         
-        /* UPGRADED TOUCH-FRIENDLY SLIDER */
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
@@ -287,7 +271,6 @@ APP_TEMPLATE = """
 
         .btn { background: #4da6ff; color: white; padding: 16px; width: 100%; border: none; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 20px; }
         
-        /* DYNAMIC CASUAL LOADING STATES */
         #loading { 
             display: none; 
             margin-top: 25px; 
@@ -312,13 +295,25 @@ APP_TEMPLATE = """
             100% { opacity: 0.4; }
         }
 
-        /* TABLE MOBILE SCALABILITY */
+        /* STYLING FOR THE HAL EASTER EGG ERROR VIEW */
+        .error-msg {
+            margin-top: 25px;
+            background: rgba(255, 77, 77, 0.08);
+            color: #ff4d4d;
+            border-left: 3px solid #ff4d4d;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            line-height: 1.5;
+            font-style: italic;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 25px; }
         th { text-align: left; color: #4da6ff; border-bottom: 1px solid rgba(77,166,255,0.2); padding: 10px; font-size: 0.9rem; }
         td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; line-height: 1.4; }
         .range-wrap { display: flex; justify-content: space-between; font-size: 0.8rem; color: #4da6ff; opacity: 0.7; }
 
-        /* Full Screen Adaptation for Tiny Displays */
         @media (max-width: 600px) {
             body { padding: 10px; justify-content: center; }
             .card { width: 100%; max-height: 95vh; padding: 20px; border-radius: 16px; }
