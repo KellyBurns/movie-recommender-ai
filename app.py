@@ -61,7 +61,7 @@ def query_ai(movies, platform, creativity_val):
             return (
                 "<div class='error-msg'>"
                 "&ldquo;I'm sorry, Hal, I can't do that. You've listed a film or actor "
-                "that does not exist. Please try again.&rdquo;"
+                "that I cannot locate. Please try again.&rdquo;"
                 "</div>"
             )
             
