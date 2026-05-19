@@ -36,15 +36,16 @@ def query_ai(movies, platform, creativity_val):
             "unconventional narrative styles, or abstract philosophical connections to the input. Be boldly creative."
         )
 
-    # Base system prompt embedded with our dynamic creativity instruction
+    # UPDATED VALIDATION RULE: Explicitly permits musical icons/crossover artists to prevent false-positive NOT_FOUND flags
     system_content = (
         f"You are an expert movie database API and recommendation engine. "
         f"Your first job is to validate the user's input. If the input consists of completely made-up gibberish, "
         f"random keyboard typing, or entirely fictional titles/people that do not exist in reality, you MUST "
         f"return exactly the word: NOT_FOUND. Do not return anything else.\n\n"
-        f"CRITICAL VALIDATION RULE: If the user provides a list combining real actors and real movies together "
-        f"(for example: 'Charlize Theron, Blade Runner'), this is completely VALID. Do not flag mixed lists of real "
-        f"entities as NOT_FOUND. Instead, accept them and use both elements to guide your suggestions.\n\n"
+        f"CRITICAL VALIDATION RULE: If the user provides real actors, real directors, or iconic musical crossover artists "
+        f"who have starred in or contributed heavily to cinema (for example: 'Michael Jackson', 'David Bowie', or 'Charlize Theron, Blade Runner'), "
+        f"this is completely VALID. Do not flag real people or real musical entities as NOT_FOUND. Instead, accept them "
+        f"and provide creative cinematic suggestions based on their filmography, musical films, documentaries, or visual style.\n\n"
         f"CREATIVITY DIRECTION: {creativity_instruction}\n\n"
         f"If the input is valid, return exactly 5 high-quality movie recommendations formatted ONLY as a pure HTML <table>. "
         f"DO NOT use markdown pipes (|). DO NOT use code block backticks (```html). Use ONLY English.\n\n"
@@ -70,7 +71,7 @@ def query_ai(movies, platform, creativity_val):
             }
         ],
         "temperature": temp_setting,
-        "presence_penalty": 0.8,  # Bumped up slightly to punish repetitive recommendations
+        "presence_penalty": 0.8,
         "max_tokens": 1200
     }
     
@@ -94,6 +95,7 @@ def query_ai(movies, platform, creativity_val):
         return "<div class='ai-text-fallback'>The AI returned an invalid format. Please try again.</div>"
     except Exception:
         return f"<div style='color:orange;'>Connection glitch. Try one more time!</div>"
+
 
 @app.route('/')
 def landing():
