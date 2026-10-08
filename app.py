@@ -76,14 +76,14 @@ def query_ai(movies, platform, creativity_val):
     }
     
     try:
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=120)
         data = response.json()
         output = data['choices'][0]['message']['content'].strip()
         
         if "NOT_FOUND" in output:
             return (
                 "<div class='error-msg'>"
-                "&ldquo;I'm sorry, Hal, I can't do that. You've listed a film or actor "
+                "&ldquo;I'm sorry, Dave. I'm afraid I can't do that. You've listed a film or actor "
                 "that I cannot locate. Please try again.&rdquo;"
                 "</div>"
             )
@@ -342,7 +342,7 @@ APP_TEMPLATE = """
         
         <div id="loading">
             <span class="pulse-text">Searching the movie universe...</span>
-            <span style="opacity:0.85; font-size:0.85rem;">Finding the perfect recommendations for you. This will take about 30 seconds.</span>
+            <span style="opacity:0.85; font-size:0.85rem;">Finding the perfect recommendations for you. The first run can take up to 90 seconds while the model warms up. Repeat runs are faster.</span>
         </div>
 
         {% if table %}<div id="results">{{ table|safe }}</div>{% endif %}
