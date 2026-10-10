@@ -222,6 +222,7 @@ LANDING_TEMPLATE = """
             font-size: 0.95rem;
             text-decoration: none;
             transition: transform 0.2s;
+            margin-top: 16px;
         }
         .launch-btn:hover { transform: scale(1.05); }
 
@@ -260,6 +261,10 @@ LANDING_TEMPLATE = """
                 <h3>What It Is</h3>
                 <p>"Healthcare Feature Review Board" is an Agentic AI-powered tool for Product Managers in Healthcare simulating a cross-functional product review. Just submit a healthcare feature idea, and four specialist agents&mdash;product, clinical workflow, patient experience, and risk/security&mdash;evaluate it for you in parallel, then a synthesis agent reconciles their findings into one recommendation.</p>
 
+                <a href="https://healthcare-feature-review-board-production.up.railway.app/" target="_blank" rel="noopener noreferrer" class="launch-btn">Launch Project</a>
+
+                <hr class="card-divider">
+
                 <h3>Human-In-The-Loop Collaboration</h3>
                 <p>I architected this multi-agent system using Claude Code as the engineering partner, working one phase at a time against a 16-phase build plan. Total build time from idea to final polish: 20 hours, solo. I maintained a strict manual audit at every checkpoint&mdash;reviewing agent outputs, catching malformed-JSON failures, verifying provider failback&mdash;before any commit reached main.</p>
 
@@ -271,9 +276,6 @@ LANDING_TEMPLATE = """
 
                 <h3>Why This Model</h3>
                 <p>Its MoE architecture delivers large-model reasoning at a fraction of the inference cost, it's ungated with no licensing friction, and it's served by multiple providers&mdash;which made the ":cheapest" failback routing possible.</p>
-
-                <hr class="card-divider">
-                <a href="https://healthcare-feature-review-board-production.up.railway.app/" target="_blank" rel="noopener noreferrer" class="launch-btn">Launch Project</a>
             </section>
 
             <section class="card">
@@ -281,6 +283,10 @@ LANDING_TEMPLATE = """
 
                 <h3>What It Is</h3>
                 <p>"Movie Matchmaker" is an AI-powered cinematic recommendation engine designed for anyone who loves movies. Simply input your favorite movies, actors, or directors&mdash;and choose your desired vibe and streaming platform&mdash;and the system validates your input, analyzes cinematic themes, and dynamically generates tailored recommendations complete with match percentages, synopses, cast details, and streaming availability.</p>
+
+                <a href="/app" class="launch-btn">Launch Project</a>
+
+                <hr class="card-divider">
 
                 <h3>Human-In-The-Loop Collaboration</h3>
                 <p>I architected this solo project through an AI-augmented prototyping process, employing Gemini 3 Flash to accelerate full-stack logic bridging back-end micro-infrastructure with front-end user experience. I maintained a strict manual audit layer throughout&mdash;correcting recursive context-loss issues, environment configuration drops, and prompt validation gates&mdash;to guarantee real-world edge-case stability.</p>
@@ -293,9 +299,6 @@ LANDING_TEMPLATE = """
 
                 <h3>Why This Model</h3>
                 <p>Qwen 2.5 72B provides massive world-knowledge coverage across global film datasets, exceptionally strong adherence to complex system prompts, and native ability to reliably output clean HTML structures without backtick artifacts or formatting failures.</p>
-
-                <hr class="card-divider">
-                <a href="/app" class="launch-btn">Launch Project</a>
             </section>
 
         </main>
