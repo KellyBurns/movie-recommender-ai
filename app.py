@@ -126,83 +126,185 @@ LANDING_TEMPLATE = """
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelly A. Burns | AI Portfolio</title>
     <style>
-        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght=200;400;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght=200;400;700&display=swap)');
-body { 
-            margin: 0; 
-            background: #05070a; 
-            color: white; 
-            font-family: 'Inter', sans-serif; 
-            display: flex; 
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #05070a url('/static/hero-network.jpg') top center / 100% auto no-repeat;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            display: flex;
             justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh; 
-            padding: 20px;
-            background-image: url('/static/space-ai-bg.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
         }
 
-        .card { 
-            background: rgba(10, 15, 25, 0.92); 
-            backdrop-filter: blur(20px);
-            padding: 30px; 
-            border-radius: 28px; 
-            width: 92vw;
-            max-width: 550px; 
-            border: 1px solid rgba(77, 166, 255, 0.3); 
-            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
-            margin: 20px auto;
-            box-sizing: border-box;
+        .page {
+            width: 100%;
+            max-width: 1600px;
+            padding: 90px 40px 40px;
         }
 
-        @media (max-width: 480px) {
-            h1 { font-size: 2.2rem; }
-            p, li { font-size: 1rem !important; }
-            .launch-btn { width: 100%; text-align: center; box-sizing: border-box; }
-            .card { padding: 20px; }
+        .site-header {
+            text-align: center;
+            margin-bottom: 56px;
         }
-            
-        h1 { font-size: 3rem; font-weight: 200; margin: 0 0 10px 0; letter-spacing: -1px; }
-        .launch-btn { 
-            background: linear-gradient(135deg, #4da6ff, #0066cc); 
-            color: white; 
-            padding: 16px 35px; 
-            border-radius: 50px; 
-            text-decoration: none; 
-            display: inline-block; 
-            font-weight: bold; 
-            margin-bottom: 40px;
+
+        .site-header h1 {
+            margin: 0;
+            font-size: 3.75rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .subtitle {
+            margin: 10px 0 0;
+            font-size: 1.15rem;
+            font-weight: 400;
+            color: #b9c2cc;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 32px;
+            max-width: 1420px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(10, 18, 34, 0.55);
+            border: 1px solid rgba(77, 166, 255, 0.28);
+            border-radius: 14px;
+            padding: 36px 36px 32px;
+            backdrop-filter: blur(6px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            margin: 0 0 18px;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #4da6ff;
+        }
+
+        .card h3 {
+            margin: 18px 0 6px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .card h3:first-of-type { margin-top: 0; }
+
+        .card p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #b9c2cc;
+        }
+
+        .card-divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            margin: 24px 0 20px;
+        }
+
+        .launch-btn {
+            align-self: flex-start;
+            display: inline-block;
+            padding: 11px 34px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #3b8cff, #1a5fd1);
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
             transition: transform 0.2s;
         }
         .launch-btn:hover { transform: scale(1.05); }
-        .tech-section { border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 25px; }
-        h2 { font-size: 1.2rem; color: #4da6ff; margin-bottom: 15px; font-weight: 700; }
-        h3 { font-size: 0.9rem; margin: 20px 0 8px 0; color: rgba(255,255,255,0.9); }
-        p { font-size: 0.85rem; line-height: 1.6; color: rgba(255, 255, 255, 0.7); margin-bottom: 15px; }
-        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.75rem; opacity: 0.6; }
+
+        .footer {
+            max-width: 1420px;
+            margin: 48px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            font-size: 0.75rem;
+            opacity: 0.6;
+        }
+        .footer p { margin: 4px 0; }
+        .footer a { color: #4da6ff; text-decoration: none; }
+
+        @media (max-width: 900px) {
+            .cards { grid-template-columns: 1fr; }
+            .site-header h1 { font-size: 2.5rem; }
+            .page { padding: 60px 20px 30px; }
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Kelly A. Burns</h1>
-        <p class="description">Explorations in AI Development</p>
-        <a href="/app" class="launch-btn">Launch Project</a>
-        <div class="tech-section">
-            <h2>Technical Architecture</h2>
-            <h3>Human-In-The-Loop Collaboration</h3>
-            <p>I architected this solo project through an AI-augmented development process to accelerate prototyping. By employing Gemini 3 Flash for high-order logic, I bridged the gap between back-end infrastructure and front-end user experience.</p>
-            <p>I maintained a strict manual audit layer, correcting recursive context-loss issues—such as repeated dropping of environment port configurations and prompt logic—to ensure system stability.</p>
-            <h3>Tech Stack</h3>
-            <p>Built on a <b>Python/Flask</b> micro-framework. Version control is managed via <b>GitHub</b> with an automated <b>CI/CD pipeline</b> deploying to a cloud-native <b>Railway</b> environment. All UI/UX is proprietary design.</p>
-            <h3>The Engine (Qwen 2.5 72B)</h3>
-            <p>Utilizes Qwen 2.5 72B via <b>Hugging Face API Router</b> for enterprise-grade reasoning. To manage stochastic randomness and prevent logical hallucinations, I implemented a <b>Temperature Parameter (0.1 - 1.0)</b>, allowing user-level control over prediction probability distributions.</p>
-        </div>
-        <div class="footer">
-            Palm Desert, CA | <a href="mailto:KBurnsDirect@gmail.com" target="_blank" style="color:#4da6ff; text-decoration:none;">KBurnsDirect@gmail.com</a><br>
-            LinkedIn: <a href="[https://www.linkedin.com/in/kellyburns-pm](https://www.linkedin.com/in/kellyburns-pm)" target="_blank" style="color:#4da6ff; text-decoration:none;">KellyBurns-PM</a><br>
-            &copy; 2026 Kelly A. Burns. All Rights Reserved. Verified Project.
-        </div>
+    <div class="page">
+
+        <header class="site-header">
+            <h1>Kelly A. Burns</h1>
+            <p class="subtitle">Explorations in AI Development</p>
+        </header>
+
+        <main class="cards">
+
+            <section class="card">
+                <h2 class="card-title">Agentic AI</h2>
+
+                <h3>What It Is</h3>
+                <p>"Healthcare Feature Review Board" is an Agentic AI-powered tool for Product Managers in Healthcare simulating a cross-functional product review. Just submit a healthcare feature idea, and four specialist agents&mdash;product, clinical workflow, patient experience, and risk/security&mdash;evaluate it for you in parallel, then a synthesis agent reconciles their findings into one recommendation.</p>
+
+                <h3>Human-In-The-Loop Collaboration</h3>
+                <p>I architected this multi-agent system using Claude Code as the engineering partner, working one phase at a time against a 16-phase build plan. Total build time from idea to final polish: 20 hours, solo. I maintained a strict manual audit at every checkpoint&mdash;reviewing agent outputs, catching malformed-JSON failures, verifying provider failback&mdash;before any commit reached main.</p>
+
+                <h3>Tech Stack</h3>
+                <p>Python/Flask, orchestrated with LangGraph. GitHub version control with automated CI/CD to Railway. The workflow graph renders live via Mermaid; results stream over Server-Sent Events (SSE). UI/UX is my proprietary design.</p>
+
+                <h3>The Engine (Qwen3-235B-A22B)</h3>
+                <p>Qwen3-235B-A22B-Instruct-2507, a non-thinking Mixture-of-Experts (MoE) model, served via the Hugging Face Inference Providers router with ":cheapest" routing across multiple providers for automatic failback. Four specialist agents run in parallel, each returning strict, schema-validated JSON; a synthesis agent reconciles their output. Malformed calls get one automatic retry; per-agent token caps bound cost and latency.</p>
+
+                <h3>Why This Model</h3>
+                <p>Its MoE architecture delivers large-model reasoning at a fraction of the inference cost, it's ungated with no licensing friction, and it's served by multiple providers&mdash;which made the ":cheapest" failback routing possible.</p>
+
+                <hr class="card-divider">
+                <a href="https://healthcare-feature-review-board-production.up.railway.app/" target="_blank" rel="noopener noreferrer" class="launch-btn">Launch Project</a>
+            </section>
+
+            <section class="card">
+                <h2 class="card-title">Generative AI</h2>
+
+                <h3>What It Is</h3>
+                <p>"Movie Matchmaker" is an AI-powered cinematic recommendation engine designed for anyone who loves movies. Simply input your favorite movies, actors, or directors&mdash;and choose your desired vibe and streaming platform&mdash;and the system validates your input, analyzes cinematic themes, and dynamically generates tailored recommendations complete with match percentages, synopses, cast details, and streaming availability.</p>
+
+                <h3>Human-In-The-Loop Collaboration</h3>
+                <p>I architected this solo project through an AI-augmented prototyping process, employing Gemini 3 Flash to accelerate full-stack logic bridging back-end micro-infrastructure with front-end user experience. I maintained a strict manual audit layer throughout&mdash;correcting recursive context-loss issues, environment configuration drops, and prompt validation gates&mdash;to guarantee real-world edge-case stability.</p>
+
+                <h3>Tech Stack</h3>
+                <p>Python/Flask micro-framework. Version control managed via GitHub with an automated CI/CD pipeline deploying to a cloud-native Railway environment. All UI/UX features are my proprietary responsive glassmorphism design.</p>
+
+                <h3>The Engine (Qwen 2.5 72B)</h3>
+                <p>Utilizes Qwen 2.5 72B via the Hugging Face API Router for enterprise-grade reasoning. To control generation variance and mitigate hallucinations, I mapped a user-controlled sampling Temperature Parameter (0.1 - 1.0) tied to dynamic prompt strategies, dynamically shifting system directions from strict, deterministic baseline matches to high-creativity indie predictions.</p>
+
+                <h3>Why This Model</h3>
+                <p>Qwen 2.5 72B provides massive world-knowledge coverage across global film datasets, exceptionally strong adherence to complex system prompts, and native ability to reliably output clean HTML structures without backtick artifacts or formatting failures.</p>
+
+                <hr class="card-divider">
+                <a href="/app" class="launch-btn">Launch Project</a>
+            </section>
+
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2026&ndash;2027 Kelly A. Burns. All Rights Reserved. Verified Projects.</p>
+            <p>Palm Desert, CA&nbsp;&nbsp;|&nbsp;&nbsp;E: <a href="mailto:KBurnsDirect@gmail.com">KBurnsDirect@gmail.com</a>&nbsp;&nbsp;|&nbsp;&nbsp;LinkedIn: <a href="https://www.linkedin.com/in/kellyburns-pm/" target="_blank" rel="noopener noreferrer">KellyBurns-PM</a></p>
+        </footer>
+
     </div>
 </body>
 </html>
